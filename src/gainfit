@@ -40,10 +40,10 @@ for obsid in $obsids; do
 
     pi="$fitdir/${obsid}.pi"
     bkg_pi="$fitdir/${obsid}_bkg.pi"
-    log_file="$fitdir/gainfit.log"
-    save_file="$fitdir/gainfit.save"
-    fit_file="$fitdir/gainfit.xcm"
-    ps_file="$fitdir/gainfit.ps"
+    log_file="$fitdir/${obsid}_gainfit.log"
+    save_file="$fitdir/${obsid}_gainfit.save"
+    fit_file="$fitdir/${obsid}_gainfit.xcm"
+    ps_file="$fitdir/${obsid}_gainfit.ps"
     rm -f "$save_file"
 
     cd $fitdir

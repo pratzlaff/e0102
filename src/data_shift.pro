@@ -39,7 +39,7 @@ for i=0,n_elements(obsids)-1 do begin
 
    obsid=obsids[i]
    infile=datadir+'/'+obsid+'/repro/acisf'+obsid+'_repro_evt2.fits'
-   outfile=fitdir+'/'+obsid+'/'+obsid+'_evt2_energy_shift_contam.fits'
+   outfile=fitdir+'/'+obsid+'/'+obsid+'_evt2_energy_shift.fits'
 
    ;; un-shifted energies (eV)
    en=[0.573900,0.653600,0.922100,1.02170]*1000.  
@@ -54,7 +54,7 @@ for i=0,n_elements(obsids)-1 do begin
     
 ; plot the correction
 
-    device,filename=fitdir+'/'+obsid+'/'+obsid+'_gain_corrections_cstat_contam.ps',/landscape,/color
+    device,filename=fitdir+'/'+obsid+'/'+obsid+'_gain_corrections_cstat.ps',/landscape,/color
 ;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+', contam '+contam,linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
 ;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+' with test CALDB',linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
     plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Cor. for ObsID '+obsid,linestyle=0,col=0,psym=-6,yr=[-0.04,0.04],/nodata

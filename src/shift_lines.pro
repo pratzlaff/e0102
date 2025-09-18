@@ -21,7 +21,7 @@ for j=0,n_elements(obsids)-1 do begin
 
     new=old*slope[j]+offset[j] 
     get_lun, lun
-    openw,lun,fit_dir+'/line_shifts_contam.xcm'
+    openw,lun,fit_dir+'/'+obsids[j]+'_line_shifts.xcm'
 
     for i=0,n_elements(param)-1 do begin
         printf,lun,'newpar '+string(param[i],format='(I3)')+' '+string(new[i],format='(F10.6)')+' 0.0001 '+string(new[i]-0.01,format='(F10.6)')+' '+string(new[i]-0.01,format='(F10.6)')+' '+string(new[i]+0.01,format='(F10.6)')+' '+string(new[i]+0.01,format='(F10.6)')

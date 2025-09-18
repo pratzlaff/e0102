@@ -35,7 +35,7 @@ sub get_results {
   my $obs=shift;
   $obs =~ s/^0*//g;
   $obs = sprintf '%05d', $obs;
-  my $infile = "$datadir/fits/".$ENV{CONTAMID}."/$obs/linefit.log";
+  my $infile = "$datadir/fits/".$ENV{CONTAMID}."/$obs/${obs}_linefit.log";
 
   my $const;
   my $cstat;

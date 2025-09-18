@@ -37,7 +37,7 @@ sub get_results {
   my $obs = shift;
   $obs =~ s/^0*//g;
   $obs = sprintf '%05d', $obs;
-  my $infile = "$datadir/fits/".$ENV{CONTAMID}."/$obs/gainfit.log";
+  my $infile = "$datadir/fits/".$ENV{CONTAMID}."/$obs/${obs}_gainfit.log";
   my $const;
   my ($cstat, $O7norm, $O7err, $O8norm, $O8err);
   my ($Ne9norm, $Ne9err, $Ne10norm, $Ne10err);

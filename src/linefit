@@ -38,14 +38,14 @@ for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
     fitdir="$datadir/fits/$CONTAMID/$obsid"
 
-    shift_script="$fitdir/line_shifts_contam.xcm"
+    shift_script="$fitdir/${obsid}_line_shifts.xcm"
 
     pi="$fitdir/${obsid}.pi"
     bkg_pi="$fitdir/${obsid}_bkg.pi"
-    log_file="$fitdir/linefit.log"
-    save_file="$fitdir/linefit.save"
-    fit_file="$fitdir/linefit.xcm"
-    ps_file="$fitdir/linefit.ps"
+    log_file="$fitdir/${obsid}_linefit.log"
+    save_file="$fitdir/${obsid}_linefit.save"
+    fit_file="$fitdir/${obsid}_linefit.xcm"
+    ps_file="$fitdir/${obsid}_linefit.ps"
     rm -f "$save_file"
 
     cd $fitdir

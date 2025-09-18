@@ -1,0 +1,101 @@
+#! /bin/bash
+
+# adapted from
+# /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/make_shifted_pi.pl
+
+set -eo pipefail
+
+[ $# -ge 1 ] || {
+    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
+    exit
+}
+obsids="$@"
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+
+. "$SCRIPTDIR/functions.sh"
+. "$SCRIPTDIR/tmppdir.sh"
+
+[ -z "$CONTAMFILE" ] &&
+    CONTAMFILE=$(\ls $CALDB/data/chandra/acis/contam/acisD1999-08-13contam*.fits | tail -1)
+
+srcreg="$datadir/reg/src.reg"
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+
+    reprodir="$datadir/$obsid/repro"
+    fitdir="$datadir/fits/$CONTAMID/$obsid"
+    bkgreg="$datadir/reg/bkg/${obsid}_bkg.reg"
+
+    evt2="$fitdir/${obsid}_evt2_energy_shift.fits"
+    newpi="$fitdir/${obsid}_energy_shift.pi"
+    bkgpi="$fitdir/${obsid}_bkg_energy_shift.pi"
+
+    punlearn ardlib
+
+    punlearn dmextract
+    dmextract \
+	infile="$evt2[sky=region($srcreg)][bin pi]" \
+	outfile="$newpi" \
+	bkgnorm=1 \
+	sys_err=0 \
+	opt=pha1 \
+	wmap='[energy=300:2000][bin tdet=8]' \
+	verbose=3 \
+	clobber=yes
+
+    dmextract \
+	infile="$evt2[sky=region($bkgreg)][bin pi]" \
+	outfile="$bkgpi" \
+	bkgnorm=1 \
+	sys_err=0 \
+	opt=pha1 \
+	wmap='[energy=300:2000][bin tdet=8]' \
+	clobber=yes \
+	verbose=3
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="$fitdir/${obsid}_bkg.rmf"
+    
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="$fitdir/${obsid}_bkg.arf"
+    
+    punlearn dmhedit
+    dmhedit \
+	infile="$newpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="$fitdir/${obsid}.rmf"
+    
+    punlearn dmhedit
+    dmhedit \
+	infile="$newpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="$fitdir/${obsid}.arf"
+    
+done
+
