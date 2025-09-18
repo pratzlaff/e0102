@@ -12,6 +12,7 @@ if (not exists $ENV{CONTAMID}) {
   print STDERR "CONTAMID is unset, exiting\n";
   exit 1;
 }
+
 my $chip = "I3";
 
 my $contam="contamN0015";

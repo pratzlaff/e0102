@@ -35,7 +35,7 @@ for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
 
     reprodir="$datadir/$obsid/repro"
-    fitdir="$datadir/$obsid/fits/$CONTAMID"
+    fitdir="$datadir/fits/$CONTAMID/$obsid"
     bkgreg="$datadir/reg/bkg/${obsid}_bkg.reg"
     evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
     asol_stack=$(\ls -1 "$reprodir/../primary/"pcad*asol1.fits*  | perl -le 'chomp(@l=<>); print join ",", @l')
