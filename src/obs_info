@@ -1,0 +1,74 @@
+#! /bin/bash
+
+# adapted from /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/get_obs_info.pl
+
+set -eo pipefail
+
+[ $# -ge 1 ] || {
+    echo Usage: $0 obsid1 obsid2 ... 1>&2
+    exit 1
+}
+obsids="$@"
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao 1>/dev/null
+
+. "$SCRIPTDIR/functions.sh"
+. "$SCRIPTDIR/tmppdir.sh"
+
+srcreg="$datadir/reg/src.reg"
+
+punlearn ardlib
+punlearn dmstat
+echo -e "#ObsID\tDate\tChipX\tChipY\tNode\tExposure\tReadmd\tDatamd\tCounts\tExptime\t1stRow\tNrows\tCCD_ID\tDate"
+echo -e "#\t\t\t\t\t\t\t\t\t0.3-2keV"
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+
+    reprodir="$datadir/$obsid/repro"
+    evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
+
+    chx=$(dmstat "$evt2[cols chipx][sky=region($srcreg)]" | grep mean | perl -anle 'print $F[1]')
+    chy=$(dmstat "$evt2[cols chipy][sky=region($srcreg)]" | grep mean | perl -anle 'print $F[1]')
+
+    node=$(( ${chx%.*}/256 ))
+
+    date=$(dmkeypar "$evt2" date-obs ec+)
+    date=${date:0:10}
+    year=${date:0:4}
+    month=${date:5:2}
+    day=${date:8:2}
+    dout=$(echo "$year+(($month-1)*30+$day)/365" | bc -l)
+
+    exposure=$(dmkeypar "$evt2" exposure ec+)
+    readmode=$(dmkeypar "$evt2" readmode ec+)
+    datamode=$(dmkeypar "$evt2" datamode ec+)
+    exptime=$(dmkeypar "$evt2" exptime ec+)
+    firstrow=$(dmkeypar "$evt2" firstrow ec+)
+    nrows=$(dmkeypar "$evt2" nrows ec+)
+    counts=$(dmstat "$evt2[cols time][sky=region($srcreg)][energy=300:2000]" | grep good | perl -anle 'print $F[1]')
+    chip_check=$(dmstat "$evt2[cols ccd_id][sky=region($srcreg)]" | grep mean | perl -anle 'print $F[1]')
+
+    printf \
+	"%s\t%7.2f\t%6.1f\t%6.1f\t%d\t%8.2f\t%6s\t%6s\t%7s\t%3s\t%3s\t%3s\t%1s\t%10s\n" \
+	$obsid \
+	$dout \
+	$chx \
+	$chy \
+	$node \
+	$exposure \
+	$readmode \
+	$datamode \
+	$counts \
+	$exptime \
+	$firstrow \
+	$nrows \
+	$chip_check \
+	$date
+
+done

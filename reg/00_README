@@ -1,0 +1,8 @@
+. ../src/functions.sh
+scp -p localhost:/home/rpete/paul11/plucinsk/chandra/data/e0102/I3/source_j2000.reg ./src.reg
+mkdir -p ./bkg
+for o in $(obsids); do
+    scp -p \
+	localhost:/home/rpete/paul11/plucinsk/chandra/data/e0102/I3/$o/repro_ciao4.15.1_caldb4.10.4/bkg.reg \
+	./bkg/$(printf %05d $((10#$o)))_bkg.reg
+done

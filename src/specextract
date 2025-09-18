@@ -1,0 +1,73 @@
+#! /bin/bash
+
+# adapted from
+# /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/specextract.pl
+
+set -eo pipefail
+
+[ $# -ge 1 ] || {
+    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
+    exit
+}
+obsids="$@"
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+
+. "$SCRIPTDIR/functions.sh"
+. "$SCRIPTDIR/tmppdir.sh"
+
+[ -z "$CONTAMFILE" ] &&
+    CONTAMFILE=$(\ls $CALDB/data/chandra/acis/contam/acisD1999-08-13contam*.fits | tail -1)
+
+srcreg="$datadir/reg/src.reg"
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+
+    reprodir="$datadir/$obsid/repro"
+    fitdir="$datadir/$obsid/fits/$CONTAMID"
+    bkgreg="$datadir/reg/bkg/${obsid}_bkg.reg"
+    evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
+    asol_stack=$(\ls -1 "$reprodir/../primary/"pcad*asol1.fits*  | perl -le 'chomp(@l=<>); print join ",", @l')
+    pbk=$(\ls -1 "$reprodir/"*pbk0.fits*)
+    msk=$(\ls -1 "$reprodir/acisf${obsid}"_*_msk1.fits*)
+    bpix="$reprodir/acisf${obsid}_repro_bpix1.fits"
+
+    mkdir -p $fitdir
+
+    punlearn ardlib
+    punlearn specextract
+
+    acis_set_ardlib "$bpix"
+
+    for i in $(seq 0 9); do
+	pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
+    done
+
+    specextract \
+	infile="$evt2[sky=region($srcreg)]" \
+	outroot="$fitdir/${obsid}_" \
+	bkgfile="$evt2[sky=region($bkgreg)]" \
+	asp="$asol_stack" \
+	mskfile="$msk" \
+	badpixfile="$bpix" \
+	weight=yes \
+	correct=no \
+	verbose=3 \
+	grouptype=NUM_CTS \
+	binspec=30 \
+	clobber=yes \
+	combine=no \
+	bkgresp=yes
+done
+
