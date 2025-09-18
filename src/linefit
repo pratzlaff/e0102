@@ -1,0 +1,92 @@
+#! /bin/bash
+
+# Adapted from
+# /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/fit_energies.pl
+# Requires NoLine_v1.3.1_{line,coco}.fits in
+# $HEADAS/../spectral/modelData, which were obtained from
+# /data/paul11/plucinsk/chandra/data/e0102
+
+set -eo pipefail
+
+[ $# -ge 1 ] || {
+    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
+    exit
+}
+
+obsids="$@"
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+emin=0.35
+emax=1.6
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+heainit
+
+. "$SCRIPTDIR/functions.sh"
+
+model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+    fitdir="$datadir/fits/$CONTAMID/$obsid"
+
+    shift_script="$fitdir/line_shifts_contam.xcm"
+
+    pi="$fitdir/${obsid}.pi"
+    bkg_pi="$fitdir/${obsid}_bkg.pi"
+    log_file="$fitdir/linefit.log"
+    save_file="$fitdir/linefit.save"
+    fit_file="$fitdir/linefit.xcm"
+    ps_file="$fitdir/linefit.ps"
+    rm -f "$save_file"
+
+    cd $fitdir
+
+    cat - <<EOP >$fit_file
+log $log_file
+query no
+statistic cstat
+data $pi
+back $bkg_pi
+ignore **-$emin
+ignore $emax-**
+@$model
+@$shift_script
+statistic cstat
+thaw 1
+fit
+fit
+fit
+fit
+thaw 119, 116, 65, 59, 29
+fit
+fit
+fit
+fit
+cpd ${ps_file}/cps
+plot ldata resid
+cpd /null
+show free
+show fit
+error max 4.0 1. 29
+error max 4.0 1. 59
+error max 4.0 1. 65
+error max 4.0 1. 116
+error max 4.0 1. 119
+show free
+show fit
+statistic chi
+weight model
+save all $save_file
+EOP
+    xspec < "$fit_file"
+done
+
