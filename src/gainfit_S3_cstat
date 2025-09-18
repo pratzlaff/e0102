@@ -40,9 +40,10 @@ for obsid in $obsids; do
 
     pi="$fitdir/${obsid}.pi"
     bkg_pi="$fitdir/${obsid}_bkg.pi"
-    log_file="$fitdir/xpec.log"
-    save_file="$fitdir/xpec.save"
-    fit_file="$fitdir/fit.xcm"
+    log_file="$fitdir/gainfit.log"
+    save_file="$fitdir/gainfit.save"
+    fit_file="$fitdir/gainfit.xcm"
+    ps_file="$fitdir/gainfit.ps"
     rm -f "$save_file"
 
     cd $fitdir
@@ -63,7 +64,7 @@ fit
 fit
 fit
 fit
-cpd fit.ps/cps
+cpd ${ps_file}/cps
 plot ldata resid
 cpd /null
 gain fit
