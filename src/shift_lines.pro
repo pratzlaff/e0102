@@ -43,5 +43,4 @@ for j=0,n_elements(obsids)-1 do begin
 
 endfor
 
-return
 end
