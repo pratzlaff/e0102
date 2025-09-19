@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+# adaptation of /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/compile_linefit_results.pl
+
 use strict;
 use warnings;
 
@@ -12,11 +14,8 @@ if (not exists $ENV{CONTAMID}) {
 }
 
 my $chip = "I3";
-
 my $contam="contamN0015";
-
 my $model="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm";
-
 my $emin="0.35";
 my $emax="1.6";
 
