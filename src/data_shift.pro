@@ -12,7 +12,7 @@ obsinfo=args[0]
 readcol,obsinfo,obsids,date,chx,chy,node,exp,rdmode,datamode,comment='#',format='(A5,F7.2,F5.1,F5.1,I1,F8.2,A5,A6)'
 
 get_lun, lun
-openw,lun,fitdir+'/gain_correction_ratios_'+getenv('DET'+'.txt' ; output text file with ratios of best-fit energy/model energy
+openw,lun,fitdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
 printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi'
 
 ;; get best-fit energies:

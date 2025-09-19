@@ -71,8 +71,10 @@ fit
 fit
 fit
 fit
+setplot energy
+setplot xlog off
 cpd ${ps_file}/cps
-plot ldata resid
+plot data resid
 cpd /null
 show free
 show fit
