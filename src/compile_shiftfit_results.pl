@@ -14,13 +14,12 @@ if (not exists $ENV{CONTAMID}) {
   exit 1;
 }
 
-my $chip = "I3";
-my $contam="contamN0015";
+my $chip = uc($ENV{DET});
 my $model="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm";
 my $emin="0.35";
 my $emax="1.6";
 
-print "# fit results for ${chip} with ${contam} and gain adjustment (data shifted)\n";
+print "# fit results for ${chip} with CONTAMID=$ENV{CONTAMID} and gain adjustment (data shifted)\n";
 print "# fitting between ${emin} - ${emax} keV\n";
 print "# model: ${model}\n";
 print "# lo and hi give 1-sigma confidence interval\n";

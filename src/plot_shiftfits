@@ -20,7 +20,7 @@ f="$1"
     exit 1
 }
 
-chip=I3
+chip=${DET^^}
 emin=0.35
 emax=1.6
 
