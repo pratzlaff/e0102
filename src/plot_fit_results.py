@@ -7,6 +7,18 @@ import numpy as np
 import os
 import sys
 
+iachec = {
+    'cons':{'val':1, 'lo':0.9, 'hi':1.1},
+    'O7':{'val':0.002745},
+    'O8':{'val':0.004393},
+    'Ne9':{'val':0.001381},
+    'Ne10':{'val':0.001378},
+}
+for key in iachec:
+    for limit in 'lo', 'hi':
+        iachec[key][limit] = iachec[key]['val'] * iachec['cons'][limit]
+cons_iachec_2016 = 1.072
+
 def read_obsinfo(obsinfo):
     obsid, date, chy, node = np.loadtxt(obsinfo, unpack=True, usecols=(0,1,3,4))
     return obsid, date, chy, node
@@ -32,71 +44,10 @@ def read_shiftfits(shiftfits):
                    'O8':{'val':o8, 'lo':o8lo, 'hi':o8hi},
                    'Ne9':{'val':ne9, 'lo':ne9lo, 'hi':ne9hi},
                    'Ne10':{'val':ne10, 'lo':ne10lo, 'hi':ne10hi},
-                   }, redchi
+                   'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
+                   }
 
-def make_plot(x, y, ylo, yhi, chy, node, title, ylabel, factor):
-
-    colors = [ 'b', 'r', '#39FF14' ]
-    symbols = [ 'D', '^', 's', 'x' ]
-    labels = ['Low ChipY', 'Mid ChipY', 'High ChipY']
-
-    if factor is None:
-        factor = np.ones(x.shape)
-
-    ii = x<2037
-    x = x[ii]
-    y = y[ii]*factor[ii]
-    ylo = ylo[ii]*factor[ii]
-    yhi = yhi[ii]*factor[ii]
-    chy = chy[ii]
-    node = node[ii]
-
-    fig, ax = plt.subplots()
-
-    has_nodes = []
-    for i in range(4):
-        ii = node==i
-        if np.sum(ii):
-            has_nodes.append(i)
-        else:
-            continue
-
-        for j in range(3):
-            jj = (chy[ii]>=341*j+1) & (chy[ii]<341*(j+1)+1)
-            x_ = x[ii][jj]
-            y_ = y[ii][jj]
-            ylo_ = ylo[ii][jj]
-            yhi_ = yhi[ii][jj]
-            ax.errorbar(x_, y_, (y_-ylo_, yhi_-y_), fmt=symbols[i], color=colors[j])
-
-    ax.set_xlim(ax.get_xlim())
-    ax.set_ylim(ax.get_ylim())
-
-    # from https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
-    lines=[]
-    for i in range(3):
-        lines += ax.plot(0, 0, color=colors[i], label=labels[i])
-    for i in has_nodes:
-        lines += ax.plot(0, 0, symbols[i], color='k', label=f'Node {i}')
-    ax.legend(lines[:3], labels, loc='upper right', frameon=False)
-
-    from matplotlib.legend import Legend
-
-    leg = Legend(ax, lines[3:], [f'Node {i}' for i in has_nodes], loc='upper left', frameon=False)
-    ax.add_artist(leg)
-    ax.set_xlabel('Date')
-    ax.set_ylabel(ylabel)
-    ax.set_title(title)
-
-    plt.tight_layout()
-
-    return fig
-
-def plot_fit_results(args):
-    obsid, date, chy, node = read_obsinfo(args.obsinfo)
-    obsid2, data, redchi = read_shiftfits(args.shiftfits)
-    if np.sum(obsid!=obsid2):
-        raise RuntimeError(f"obsids don't match in '{args.obsinfo}' and '{args.shiftfits}'")
+def make_plots(args, date, data, chy, node):
 
     title = f'{os.environ["DET"].upper()} subarray {os.environ["CONTAMID"]}: '
     titles = { }
@@ -108,52 +59,112 @@ def plot_fit_results(args):
     ylabels = { }
     for key in titles:
         ylabels[key] = 'Best-fit normalization'
-    ylabels['redchi'] = 'reduced Q-stat'
+    ylabels['redchi'] = 'Reduced Q-stat'
 
     if args.pdf:
         pdf = PdfPages(args.pdf)
 
-    fig = make_plot(date,
-              data['cons']['val'], data['cons']['lo'], data['cons']['hi'],
-              chy,
-              node,
-              titles['cons'],
-              ylabels['cons'],
-              None
-              )
-    if args.pdf:
-        pdf.savefig(fig)
-    else:
-        plt.show()
+    colors = [ 'b', 'r', '#39FF14' ]
+    symbols = [ 'D', '^', 's', 'x' ]
+    labels = ['Low ChipY', 'Mid ChipY', 'High ChipY']
 
-    for line in 'O7', 'O8', 'Ne9', 'Ne10':
-        fig = make_plot(date,
-                  data[line]['val'], data[line]['lo'], data[line]['hi'],
-                  chy,
-                  node,
-                  titles[line],
-                  ylabels[line],
-                  data['cons']['val']
-                  )
+
+    for key in data:
+        x = date
+        y = data[key]['val']
+        ylo = data[key]['lo']
+        yhi = data[key]['hi']
+
+        factor = data['cons']['val']
+        if key == 'redchi' or key == 'cons':
+            factor = np.ones(x.shape)
+
+        ii = x<2037
+        x = x[ii]
+        y = y[ii]*factor[ii]
+        ylo = ylo[ii]*factor[ii]
+        yhi = yhi[ii]*factor[ii]
+        chy = chy[ii]
+        node = node[ii]
+
+        fig, ax = plt.subplots()
+
+        has_nodes = []
+        for i in range(4):
+            ii = node==i
+            if np.sum(ii):
+                has_nodes.append(i)
+            else:
+                continue
+
+            for j in range(3):
+                jj = (chy[ii]>=341*j+1) & (chy[ii]<341*(j+1)+1)
+                x_ = x[ii][jj]
+                y_ = y[ii][jj]
+                ylo_ = ylo[ii][jj]
+                yhi_ = yhi[ii][jj]
+                ax.errorbar(x_, y_, (y_-ylo_, yhi_-y_), fmt=symbols[i], color=colors[j])
+
+        xlim = ax.get_xlim()
+ 
+        if key != 'redchi':
+            ax.plot(xlim, [iachec[key]['val']]*2, 'k-')
+            ax.plot(xlim, [iachec[key]['lo']]*2, 'k:')
+            ax.plot(xlim, [iachec[key]['hi']]*2, 'k:')
+
+        if key == 'cons':
+            ax.plot(xlim, [cons_iachec_2016]*2, 'r-')
+
+        ylim = ax.get_ylim()
+        ax.set_ylim(ax.get_ylim())
+        ax.set_xlim(xlim)
+
+       # from https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
+        lines=[]
+        for i in range(3):
+            lines += ax.plot(0, 0, color=colors[i])
+        for i in has_nodes:
+            lines += ax.plot(0, 0, symbols[i], color='k')
+        ax.legend(lines[:3], labels, loc='upper right', frameon=False)
+
+        from matplotlib.legend import Legend
+
+        leg = Legend(ax, lines[3:], [f'Node {i}' for i in has_nodes], loc='upper left', frameon=False)
+        ax.add_artist(leg)
+
+        if key != 'redchi':
+            line = ax.plot(0, 0, '-', color='k')
+            label = 'IACHEC value'
+            leg = Legend(ax, line, [label], loc='lower left', frameon=False)
+            ax.add_artist(leg)
+
+        if key == 'cons':
+            line = ax.plot(0, 0, '-', color='r')
+            label = '2003-06 value'
+            leg = Legend(ax, line, [label], loc='lower right', frameon=False)
+            ax.add_artist(leg)
+
+        ax.set_xlabel('Date')
+        ax.set_ylabel(ylabels[key])
+        ax.set_title(titles[key])
+
+        plt.tight_layout()
+
         if args.pdf:
             pdf.savefig(fig)
         else:
             plt.show()
 
-    fig = make_plot(date,
-              redchi, redchi, redchi,
-              chy,
-              node,
-              titles['redchi'],
-              ylabels['redchi'],
-              None
-              )
     if args.pdf:
-        pdf.savefig(fig)
         pdf.close()
-    else:
-        plt.show()
 
+def plot_fit_results(args):
+    obsid, date, chy, node = read_obsinfo(args.obsinfo)
+    obsid2, data = read_shiftfits(args.shiftfits)
+    if np.sum(obsid!=obsid2):
+        raise RuntimeError(f"obsids don't match in '{args.obsinfo}' and '{args.shiftfits}'")
+
+    make_plots(args, date, data, chy, node)
 
 def main():
     parser = argparse.ArgumentParser(
