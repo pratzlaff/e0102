@@ -29,7 +29,7 @@ for det in i3 s3; do
 
     ./gainfit $obsids
     gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"
-    perl compile_gainfit_results.pl $obsids > "$gainfits_txt"
+    perl ./compile_gainfit_results.pl $obsids > "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
     psmerge_xspec gain
 
@@ -37,7 +37,7 @@ for det in i3 s3; do
 
     ./linefit $obsids
     linefits_txt="$datadir/fits/$CONTAMID/linefits_${DET}.txt"
-    perl compile_linefit_results.pl $obsids > "$linefits_txt"
+    perl ./compile_linefit_results.pl $obsids > "$linefits_txt"
     ./plot_linefits "$linefits_txt"
     psmerge_xspec line
 
@@ -55,8 +55,7 @@ for det in i3 s3; do
     python3 \
 	./plot_fit_results.py \
 	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
-	"$shiftfits_txt"
+	"$shiftfits_txt" \
+	-p "$datadir/fits/$CONTAMID/params_${DET}.pdf"
 
 done
-
-
