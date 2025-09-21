@@ -1,0 +1,72 @@
+#! /bin/bash
+
+#
+# Adapted from
+#
+# ./plot_shiftfits
+#
+
+set -eo pipefail
+
+[ $# -eq 1 ] || {
+    echo Usage: $0 linefits_table
+    exit
+}
+
+f="$1"
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+chip=${DET^^}
+emin=0.35
+emax=1.6
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+heainit
+
+plot_linefit() {
+    [ $# -eq 5 ] || {
+	echo "Usage: $0 obsid cstat dof redchi chi" 1>&2
+	return 1
+    }
+    local obsid="$1"
+    local cstat="$2"
+    local dof="$3"
+    local redchi="$4"
+    local chi="$5"
+
+    obsid=$(printf %05d $((10#"$obsid")))
+    fitdir="$datadir/fits/$CONTAMID/$obsid"
+    savefile="$fitdir/${obsid}_linefit.save"
+    plotfile="$fitdir/${obsid}_linefit_plot.xcm"
+    psfile="$fitdir/${obsid}_linefit.ps"
+
+    cd $fitdir
+
+    cat - <<EOP >"$plotfile"
+@$savefile
+setplot energy
+setplot xlog off
+iplot data resid
+rescale x $emin $emax
+label otop CONTAMID=$CONTAMID, "Big-4" line energy fits
+label top $chip, ObsID $obsid, C-stat=$cstat, dof=$dof, Q-stat=$chi, reduced Q stat=$redchi
+hardcopy $psfile/cps
+EOP
+    xspec < "$plotfile"
+    cd -
+}
+
+while IFS= read -r line; do
+    [[ "$line" =~ ^# ]] && continue
+    read -r obsid cstat dof redchi chi <<<$(perl -anle 'print join " ", @F[0, 10..13]' <<< "$line")
+    plot_linefit $obsid $cstat $dof $redchi $chi
+done < "$f"

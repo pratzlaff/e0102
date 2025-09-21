@@ -28,43 +28,34 @@ for det in i3 s3; do
     ./specextract $obsids
 
     ./gainfit $obsids
+    gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"
+    perl compile_gainfit_results.pl $obsids > "$gainfits_txt"
+    ./plot_gainfits "$gainfits_txt"
+    psmerge_xspec gain
+
+    echo '.run shift_lines.pro'  | gdl -args $obsids
+
+    ./linefit $obsids
+    linefits_txt="$datadir/fits/$CONTAMID/linefits_${DET}.txt"
+    perl compile_linefit_results.pl $obsids > "$linefits_txt"
+    ./plot_linefits "$linefits_txt"
+    psmerge_xspec line
+
+    echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
+
+    ./shift_pi $obsids
+
+    ./shiftfit $obsids
+    shiftfits_txt="$datadir/fits/$CONTAMID/shiftfits_${DET}.txt"
+    perl ./compile_shiftfit_results.pl $obsids > "$shiftfits_txt"
+    ./plot_shiftfits "$shiftfits_txt"
+    psmerge_xspec shift
+
+    python3 \
+	./plot_fit_results.py \
+	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
+	"/data/legs/rpete/data/e0102/fits/$CONTAMID/shiftfits_${DET}.txt"
 
 done
-exit
 
 
-./specextract $obsids
-
-./gainfit $obsids
-
-perl compile_gainfit_results.pl $obsids > $datadir/fits/$CONTAMID/gainfits_${DET}.txt
-
-echo '.run shift_lines.pro'  | gdl -args $obsids
-
-./linefit $obsids
-
-perl compile_linefit_results.pl $obsids > $datadir/fits/$CONTAMID/linefits_${DET}.txt
-
-echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
-
-./shift_pi $obsids
-
-./shiftfit $obsids
-
-perl ./compile_shiftfit_results.pl $obsids > $datadir/fits/$CONTAMID/shiftfits_${DET}.txt
-
-./plot_shiftfits $datadir/fits/$CONTAMID/shiftfits_${DET}.txt
-
-python3 \
-    ./plot_fit_results.py \
-    $datadir/obs_info/$DET.txt \
-    $datadir/fits/$CONTAMID/shiftfits_${DET}.txt
-
-psfiletmp=$datadir/fits/$CONTAMID/shiftfits_${DET}.ps.tmp
-psfile="${psfiletmp%%.tmp}"
-for obsid in $obsids; do
-    obsid=$(printf %05d $((10#$obsid)))
-    echo $datadir/fits/$CONTAMID/$obsid/${obsid}_shiftfit.ps
-done | xargs psmerge -o "$psfiletmp"
-gs -dBATCH -dNOPAUSE -sOutputFile="$psfile" -sDEVICE=ps2write -dAutoRotatePages=/None -c "<< /Orientation 3 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
-rm "$psfiletmp"

@@ -2,6 +2,7 @@
 
 import argparse
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
 import sys
@@ -88,7 +89,8 @@ def make_plot(x, y, ylo, yhi, chy, node, title, ylabel, factor):
     ax.set_title(title)
 
     plt.tight_layout()
-    plt.show()
+
+    return fig
 
 def plot_fit_results(args):
     obsid, date, chy, node = read_obsinfo(args.obsinfo)
@@ -100,7 +102,7 @@ def plot_fit_results(args):
     titles = { }
     for key in data:
         titles[key] = title + f'{key} normalization'
-    titles['cons'] = title + 'overalll normalization'
+    titles['cons'] = title + 'overall normalization'
     titles['redchi'] = title + 'goodness of fit'
 
     ylabels = { }
@@ -108,7 +110,10 @@ def plot_fit_results(args):
         ylabels[key] = 'Best-fit normalization'
     ylabels['redchi'] = 'reduced Q-stat'
 
-    make_plot(date,
+    if args.pdf:
+        pdf = PdfPages(args.pdf)
+
+    fig = make_plot(date,
               data['cons']['val'], data['cons']['lo'], data['cons']['hi'],
               chy,
               node,
@@ -116,9 +121,13 @@ def plot_fit_results(args):
               ylabels['cons'],
               None
               )
+    if args.pdf:
+        pdf.savefig(fig)
+    else:
+        plt.show()
 
     for line in 'O7', 'O8', 'Ne9', 'Ne10':
-        make_plot(date,
+        fig = make_plot(date,
                   data[line]['val'], data[line]['lo'], data[line]['hi'],
                   chy,
                   node,
@@ -126,7 +135,12 @@ def plot_fit_results(args):
                   ylabels[line],
                   data['cons']['val']
                   )
-    make_plot(date,
+        if args.pdf:
+            pdf.savefig(fig)
+        else:
+            plt.show()
+
+    fig = make_plot(date,
               redchi, redchi, redchi,
               chy,
               node,
@@ -134,6 +148,11 @@ def plot_fit_results(args):
               ylabels['redchi'],
               None
               )
+    if args.pdf:
+        pdf.savefig(fig)
+        pdf.close()
+    else:
+        plt.show()
 
 
 def main():
