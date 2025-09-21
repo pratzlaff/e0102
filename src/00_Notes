@@ -54,7 +54,7 @@ for det in i3 s3; do
     python3 \
 	./plot_fit_results.py \
 	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
-	"/data/legs/rpete/data/e0102/fits/$CONTAMID/shiftfits_${DET}.txt"
+	"$shiftfits_txt"
 
 done
 
