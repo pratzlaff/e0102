@@ -60,3 +60,37 @@ psmerge_xspec()
 
 }
 
+psmerge_gain_corrections()
+{
+    [[ "$DET" =~ ^[is]3$ ]] || {
+	echo "DET must be i3|s3" 2>&1
+	return 1
+    }
+
+    [ -z "$CONTAMID" ] && {
+	echo "CONTAMID must be set" 2>&1
+	return 1
+    }
+
+    [ $# -ge 1 ] && {
+	obsids="$@"
+    } || {
+	obsids=$(obsids $DET)
+    }
+
+    psfiletmp="$datadir/fits/$CONTAMID/gain_corrections_${DET}.ps.tmp"
+    psfile="${psfiletmp%%.tmp}"
+    for obsid in $obsids; do
+	obsid=$(printf %05d $((10#$obsid)))
+	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_gain_corrections.ps"
+    done | xargs psmerge -o "$psfiletmp"
+
+    gs \
+	-dBATCH \
+	-dNOPAUSE \
+	-sOutputFile="$psfile" \
+	-sDEVICE=ps2write \
+	-dAutoRotatePages=/None \
+	-c "<< /Orientation 1 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
+    rm "$psfiletmp"
+}

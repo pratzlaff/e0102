@@ -42,6 +42,7 @@ for det in i3 s3; do
     psmerge_xspec line
 
     echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
+    psmerge_gain_corrections
 
     ./shift_pi $obsids
 
