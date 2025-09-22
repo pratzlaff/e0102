@@ -2,31 +2,24 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 obsid1 obsid2 ... 1>&2
-    exit 1
-}
-obsids="$@"
-
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 ciao
-
-. "$SCRIPTDIR/functions.sh"
 cd $datadir
 
 for obsid in $obsids; do
-    o5str=$(printf %05d $((10#$obsid)))
-    [ -d $o5str -a  $o5str != $obsid ] && mv $o5str $obsid
-done
+    obsid=$((10#$obsid))
+    o5str=$(printf %05d $obsid)
+    [ -d $o5str ] && continue
 
-download_chandra_obsid $(sed 's/ /,/g' <<< "$obsids")
+    download_chandra_obsid $obsid
 
-for obsid in $obsids; do
-    o5str=$(printf %05d $((10#$obsid)))
     [ $o5str = $obsid ] || mv $obsid $o5str
 done
 

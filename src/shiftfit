@@ -12,34 +12,28 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
-    exit
-}
-
-obsids="$@"
-
 [ -z "$CONTAMID" ] && {
     echo "CONTAMID is not set, exiting" 1>&2
     exit 1
 }
 
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
+
 emin=0.35
 emax=1.6
-
-SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 heainit
 
-. "$SCRIPTDIR/functions.sh"
-
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
-for obsid in $obsids; do
-    obsid=$(printf %05d $((10#"$obsid")))
+fit_obsid() {
+    obsid=$(printf %05d $((10#"$1")))
     fitdir="$datadir/fits/$CONTAMID/$obsid"
 
     pi="$fitdir/${obsid}_energy_shift.pi"
@@ -67,8 +61,10 @@ fit
 fit
 fit
 fit
+setplot energy
+setplot xlog off
 cpd ${ps_file}/cps
-plot ldata resid
+plot data resid
 cpd /null
 show free
 show fit
@@ -84,5 +80,13 @@ weight model
 save all $save_file
 EOP
     xspec < "$fit_file"
-done
+}
 
+for obsid in $obsids; do
+    fit_obsid $obsid
+    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/*)
+    [ -n "$match" ] && {
+	combobs=$(perl -F= -anle 'print $F[0]' <<<$match)
+	fit_obsid $combobs
+    }
+done

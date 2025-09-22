@@ -2,15 +2,10 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo "Usage: $0 [obsid1 obsid2 ...]" 1>&2
-    exit
-}
-obsids="$@"
-
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
 
-. $SCRIPTDIR/functions.sh
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 imagedir="$datadir/images"
 mkdir -p "$imagedir"
@@ -20,6 +15,19 @@ for obsid in $obsids; do
     regdir="$datadir/reg"
     srcreg="$regdir/src.reg"
     bkgreg="$regdir/bkg/${obsid}_bkg.reg"
+
+    [ -f "$srcreg" ] || {
+	echo "not found: '$srcreg'" 2>&1
+	exit 1
+    }
+
+    [ -f "$bkgreg" ] || {
+	echo "not found: '$bkgreg'" 2>&1
+	exit 1
+    }
+
+    imagefile="$imagedir/$obsid.jpg"
+    [ -f "$imagefile" ] && continue
     evt2=$(\ls $datadir/$obsid/repro/acisf${obsid}_repro_evt2.fits)
     ds9 \
 	"$evt2" \

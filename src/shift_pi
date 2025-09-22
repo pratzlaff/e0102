@@ -5,29 +5,22 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
-    exit
-}
-obsids="$@"
-
 [ -z "$CONTAMID" ] && {
     echo "CONTAMID is not set, exiting" 1>&2
     exit 1
 }
 
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 ciao
 
-. "$SCRIPTDIR/functions.sh"
 . "$SCRIPTDIR/tmppdir.sh"
-
-[ -z "$CONTAMFILE" ] &&
-    CONTAMFILE=$(\ls $CALDB/data/chandra/acis/contam/acisD1999-08-13contam*.fits | tail -1)
 
 srcreg="$datadir/reg/src.reg"
 
@@ -97,3 +90,8 @@ for obsid in $obsids; do
     
 done
 
+# now look for spectra to combine
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+    combine_spectra $(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/*)
+done

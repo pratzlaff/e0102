@@ -5,25 +5,21 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 [obsid1 obsid2 ...] 1>&2
-    exit
-}
-obsids="$@"
-
 [ -z "$CONTAMID" ] && {
     echo "CONTAMID is not set, exiting" 1>&2
     exit 1
 }
 
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 ciao
 
-. "$SCRIPTDIR/functions.sh"
 . "$SCRIPTDIR/tmppdir.sh"
 
 [ -z "$CONTAMFILE" ] &&
@@ -54,7 +50,7 @@ for obsid in $obsids; do
 	pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
     done
 
-    specextract \
+    echo specextract \
 	infile="$evt2[sky=region($srcreg)]" \
 	outroot="$fitdir/${obsid}_" \
 	bkgfile="$evt2[sky=region($bkgreg)]" \
@@ -70,4 +66,4 @@ for obsid in $obsids; do
 	combine=no \
 	bkgresp=yes
 done
-
+    

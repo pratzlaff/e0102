@@ -1,3 +1,7 @@
+# see
+#  /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/contamN0015_cstat_shift_en_test_ciao4.15.1_caldbs4.10.4_combine_fit.xcm
+#  /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/combine_spectra.com
+
 set -eo pipefail
 
 . ./functions.sh
@@ -9,23 +13,19 @@ ciao
 
 export CONTAMID=$(./ciaostr)
 
+export DET=all
+./download
+./repro
+./images
+
+for det in i3 s3 all; do
+    DET=$det ./obs_info | tee $datadir/obs_info/$det.txt
+done
+
 for det in i3 s3; do
     export DET=$det
 
-    obsids=$(obsids $DET)
-
-    for obsid in $obsids; do
-	obsid=$((10#$obsid))
-	o5str=$(printf %05d $obsid)
-	[ -d "$datadir/$o5str" ] || echo ./download $obsid
-	[ -d "$datadir/$o5str/repro" ] || echo ./repro $obsid
-	[ -f "$datadir/images/$o5str.jpg" ] || echo ./images $obsid
-    done
-
-    mkdir -p $datadir/obs_info
-    ./obs_info $obsids > $datadir/obs_info/$DET.txt
-
-    ./specextract $obsids
+    ./specextract
 
     ./gainfit $obsids
     gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"
@@ -44,9 +44,9 @@ for det in i3 s3; do
     echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
     psmerge_gain_corrections
 
-    ./shift_pi $obsids
+    ./shift_pi
 
-    ./shiftfit $obsids
+    ./shiftfit
     shiftfits_txt="$datadir/fits/$CONTAMID/shiftfits_${DET}.txt"
     perl ./compile_shiftfit_results.pl $obsids > "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"

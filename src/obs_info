@@ -4,20 +4,16 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 obsid1 obsid2 ... 1>&2
-    exit 1
-}
-obsids="$@"
-
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 ciao 1>/dev/null
 
-. "$SCRIPTDIR/functions.sh"
 . "$SCRIPTDIR/tmppdir.sh"
 
 srcreg="$datadir/reg/src.reg"

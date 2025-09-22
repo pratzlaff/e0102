@@ -94,3 +94,84 @@ psmerge_gain_corrections()
 	-c "<< /Orientation 1 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
     rm "$psfiletmp"
 }
+
+combine_spectra()
+{
+    [ $# -eq 0 ] && return
+    # [ $# -eq 1 ] || {
+    # 	echo "Usage: $0 combined_obsid=obsid1,obsid2,..."
+    # 	return 1
+    # }
+
+    local outobs inobs
+    read outobs inobs <<<$(echo "$1" | perl -F= -anle 'print "$F[0] $F[1]"')
+    inobs=${inobs/,/ }
+
+    local outdir="$datadir/fits/$CONTAMID/$outobs"
+    mkdir -p "$outdir"
+
+    local outroot="$outdir/$outobs"
+    local pi_stack=$(echo $inobs | perl -anle 'print join(",", map { "'"$datadir/fits/$CONTAMID/"'$_/${_}_energy_shift.pi" } @F)')
+    local pi_bkg_stack=$(echo $inobs | perl -anle 'print join(",", map { "'"$datadir/fits/$CONTAMID/"'$_/${_}_bkg_energy_shift.pi" } @F)')
+
+    punlearn combine_spectra
+    "$ASCDS_INSTALL/bin/combine_spectra" \
+	"$pi_stack" \
+	"$outroot" \
+	bkg_spectra="$pi_bkg_stack" \
+	bscale_method=counts \
+	cl+
+
+    local srcpi="$outdir/${outobs}_energy_shift.pi"
+    local bkgpi="$outdir/${outobs}_bkg_energy_shift.pi"
+    local srcarf="$outdir/${outobs}.arf"
+    local bkgarf="$outdir/${outobs}_bkg.arf"
+    local srcrmf="$outdir/${outobs}.rmf"
+    local bkgrmf="$outdir/${outobs}_bkg.rmf"
+
+    mv "$outdir/${outobs}_src.pi" "$srcpi"
+    mv "$outdir/${outobs}_bkg.pi" "$bkgpi"
+    mv "$outdir/${outobs}_src.arf" "$srcarf"
+    mv "$outdir/${outobs}_src.rmf" "$srcrmf"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=backfile \
+	value="'$bkgpi'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="'$srcarf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="'$srcrmf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="'$bkgarf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="'$bkgrmf'"
+
+}

@@ -4,32 +4,30 @@
 
 set -eo pipefail
 
-[ $# -ge 1 ] || {
-    echo Usage: $0 obsid1 obsid2 ... 1>&2
-    exit 1
-}
-obsids="$@"
-
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
 
 . ~/.bash_aliases
 shopt -s expand_aliases
 
 ciao
 
-. "$SCRIPTDIR/functions.sh"
 . "$SCRIPTDIR/tmppdir.sh"
 
 for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
-    punlearn ardlib
-    punlearn chandra_repro
-    chandra_repro \
-	"$datadir/$obsid" \
-	"$datadir/$obsid/repro" \
-	check_vf_pha=no \
-	set_ardlib=no \
-	verbose=3 \
-	clob+
+    [ -d "$datadir/$obsid/repro" ] || {
+	punlearn ardlib
+	punlearn chandra_repro
+	chandra_repro \
+	    "$datadir/$obsid" \
+	    "$datadir/$obsid/repro" \
+	    check_vf_pha=no \
+	    set_ardlib=no \
+	    verbose=3 \
+	    clob+
+    }
 done
 
