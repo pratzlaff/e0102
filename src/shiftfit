@@ -48,7 +48,7 @@ fit_obsid() {
 
     cat - <<EOP >$fit_file
 log $log_file
-query no
+query yes
 data $pi
 back none
 back $bkg_pi
@@ -84,9 +84,9 @@ EOP
 
 for obsid in $obsids; do
     fit_obsid $obsid
-    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/*)
+    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/* || :)
     [ -n "$match" ] && {
 	combobs=$(perl -F= -anle 'print $F[0]' <<<$match)
 	fit_obsid $combobs
-    }
+    } || :
 done

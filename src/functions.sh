@@ -1,4 +1,4 @@
-srcdir=/data/legs/rpete/flight/e0102
+srcdir=/data/legs/rpete/flight/e0102/src
 datadir=/data/legs/rpete/data/e0102
 
 obsids()
@@ -8,7 +8,7 @@ obsids()
 	return 1
     }
     local det=${1,,}
-    \grep '^[0-9]' "${srcdir}/data/obsids/$det.lst" | cut -f 1 #| tail -1
+    \grep '^[0-9]' "${srcdir}/../data/obsids/$det.lst" | cut -f 1 #| tail -1
 }
 
 psmerge_xspec()
@@ -42,6 +42,9 @@ psmerge_xspec()
 	obsids=$(obsids $DET)
     }
 
+    [ "$type" = shift ] && {
+	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/combine/$DET")
+    }
     psfiletmp="$datadir/fits/$CONTAMID/${type}fits_${DET}.ps.tmp"
     psfile="${psfiletmp%%.tmp}"
     for obsid in $obsids; do

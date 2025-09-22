@@ -7,6 +7,7 @@ use warnings;
 use Data::Dumper;
 
 my $datadir='/data/legs/rpete/data/e0102';
+my $srcdir ='/data/legs/rpete/flight/e0102/src';
 
 my @obsids = @ARGV;
 if (not exists $ENV{CONTAMID}) {
@@ -27,7 +28,12 @@ print "#\n";
 print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
 
 for my $obsid (@obsids) {
+
   get_results($obsid);
+
+  my @match = `grep --no-filename ",$obsid\$" "$srcdir/../data/combine/"*`;
+  @match and $obsid = +(split '=', $match[0])[0], get_results($obsid);
+
 }
 
 sub get_results {

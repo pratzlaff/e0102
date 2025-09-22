@@ -50,7 +50,7 @@ for obsid in $obsids; do
 	pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
     done
 
-    echo specextract \
+    specextract \
 	infile="$evt2[sky=region($srcreg)]" \
 	outroot="$fitdir/${obsid}_" \
 	bkgfile="$evt2[sky=region($bkgreg)]" \
