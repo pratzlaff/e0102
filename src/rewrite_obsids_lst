@@ -1,0 +1,34 @@
+#! /bin/bash
+
+set -eo pipefail
+
+[ $# -eq 1 ] || {
+    echo "Usage: $0 i3|s3|all" 1>&2
+    exit 1
+}
+
+det="$1"
+
+[[ $det =~ ^i3|s3|all$ ]] || {
+    echo "Usage: $0 i3|s3|all" 1>&2
+    exit 1
+}
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+
+lst="$SCRIPTDIR/../data/obsids/$det.lst"
+for o in $(obsids $det); do
+    o=$(printf %05d $((10#$o)));
+    evt2="$datadir/$o/repro/acisf${o}_repro_evt2.fits"
+    date=$(dmkeypar "$evt2" date-obs ec+)
+    echo -e "${date:0:10}\t$((10#$o))"
+done | sort | perl -anle 'print "$F[1]"' > "$lst".new
+mv "$lst".new "$lst"
+	 
+
