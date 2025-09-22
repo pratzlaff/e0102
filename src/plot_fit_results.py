@@ -5,7 +5,11 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
+from pprint import pprint
+import re
 import sys
+
+srcdir=f'/data/legs/rpete/flight/e0102/src'
 
 iachec = {
     'cons':{'val':1, 'lo':0.9, 'hi':1.1},
@@ -158,12 +162,66 @@ def make_plots(args, date, data, chy, node):
     if args.pdf:
         pdf.close()
 
-def plot_fit_results(args):
+def combine(args):
+    global srcdir
+
     obsid, date, chy, node = read_obsinfo(args.obsinfo)
     obsid2, data = read_shiftfits(args.shiftfits)
-    if np.sum(obsid!=obsid2):
+    ii = obsid2<80000
+    if np.sum(obsid!=obsid2[ii]):
         raise RuntimeError(f"obsids don't match in '{args.obsinfo}' and '{args.shiftfits}'")
 
+    obsid = [f'{int(o):05d}' for o in obsid]
+    obsid2 = [f'{int(o):05d}' for o in obsid2]
+
+    do_pprint=False
+
+    if do_pprint:
+        pprint(obsid)
+        pprint(date)
+        pprint(chy)
+        pprint(node)
+        pprint(obsid2)
+        pprint(data)
+
+    combinedf=f'{srcdir}/../data/combine/{os.environ["DET"]}'
+    with open(combinedf) as cfile:
+        for line in cfile:
+
+            # first deal with obs_info data
+            match = re.search(r'^(\d{5})=(.*)$', line)
+            combined = match.group(1)
+            to_combine = match.group(2).split(',')
+            pprint(to_combine)
+            pprint(combined)
+            for o in to_combine[:-1]:
+                index = obsid.index(o)
+                obsid.pop(index)
+                date = np.delete(date, index)
+                chy = np.delete(chy, index)
+                node = np.delete(node, index)
+            obsid[obsid.index(to_combine[-1])] = combined
+
+            # then shiftfits
+            for o in to_combine:
+                index = obsid2.index(o)
+                obsid2.pop(index)
+                for key1 in data:
+                    for key2 in data[key1]:
+                        data[key1][key2] = np.delete(data[key1][key2], index)
+
+    if do_pprint:
+        pprint(obsid)
+        pprint(date)
+        pprint(chy)
+        pprint(node)
+        pprint(obsid2)
+        pprint(data)
+
+    return date, chy, node, data
+
+def plot_fit_results(args):
+    date, chy, node, data = combine(args)
     make_plots(args, date, data, chy, node)
 
 def main():

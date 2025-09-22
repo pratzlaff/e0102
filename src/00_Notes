@@ -19,15 +19,16 @@ export DET=all
 ./images
 
 false && {
-    for det in i3 s3 all; do
-	DET=$det ./obs_info | tee $datadir/obs_info/$det.txt
-    done
+    DET=all ./obs_info | tee $datadir/obs_info/$det.txt
 }
 
 dets='i3 s3'
+dets=s3
 for det in $dets; do
     export DET=$det
     obsids=$(obsids $det)
+
+    DET=$det ./obs_info | tee $datadir/obs_info/$det.txt
 
     ./specextract
 
@@ -56,7 +57,7 @@ for det in $dets; do
     ./plot_shiftfits "$shiftfits_txt"
     psmerge_xspec shift
 
-    false && python3 \
+    true && python3 \
 	./plot_fit_results.py \
 	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
 	"$shiftfits_txt" \
