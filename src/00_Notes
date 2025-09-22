@@ -13,17 +13,26 @@ ciao
 
 export CONTAMID=$(./ciaostr)
 
+# add obsids to ../obsids/all.lst, then
 export DET=all
 ./download
 ./repro
+false && {
+    cp -a ../data/obsids/all.lst ../data/obsids/all.lst.bak
+    ./rewrite_obsid_lst all
+    ./obs_info | tee $datadir/obs_info/$det.txt
+    # make new bkg regions
+}
 ./images
 
 false && {
-    DET=all ./obs_info | tee $datadir/obs_info/$det.txt
+    for det in i3 s3 all; do
+	DET=$det ./obs_info | tee $datadir/obs_info/$det.txt
+    done
 }
 
 dets='i3 s3'
-dets=s3
+dets=i3
 for det in $dets; do
     export DET=$det
     obsids=$(obsids $det)
