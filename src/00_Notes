@@ -32,7 +32,6 @@ false && {
 }
 
 dets='i3 s3'
-dets=i3
 for det in $dets; do
     export DET=$det
     obsids=$(obsids $det)
