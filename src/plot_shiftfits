@@ -49,6 +49,9 @@ plot_shiftfit() {
     plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
     psfile="$fitdir/${obsid}_shiftfit.ps"
 
+    combine=$(\grep ^$obsid "$srcdir/../data/combine/$DET" || :)
+    [ -n "$combine" ] && obsid=$(perl -F= -anle 'print $F[1]' <<<"$combine")
+
     cd $fitdir
 
     cat - <<EOP >"$plotfile"
