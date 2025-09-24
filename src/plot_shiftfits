@@ -37,20 +37,21 @@ plot_shiftfit() {
 	echo "Usage: $0 obsid cstat dof redchi chi" 1>&2
 	return 1
     }
-    local obsid="$1"
+    local obsid=$(printf %05d $((10#"$1")))
     local cstat="$2"
     local dof="$3"
     local redchi="$4"
     local chi="$5"
 
-    obsid=$(printf %05d $((10#"$obsid")))
-    fitdir="$datadir/fits/$CONTAMID/$obsid"
-    savefile="$fitdir/${obsid}_shiftfit.save"
-    plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
-    psfile="$fitdir/${obsid}_shiftfit.ps"
+    local fitdir="$datadir/fits/$CONTAMID/$obsid"
+    local savefile="$fitdir/${obsid}_shiftfit.save"
+    local plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
+    local psfile="$fitdir/${obsid}_shiftfit.ps"
 
     combine=$(\grep ^$obsid "$srcdir/../data/combine/$DET" || :)
     [ -n "$combine" ] && obsid=$(perl -F= -anle 'print $F[1]' <<<"$combine")
+
+    local date=$(obsid_date ${obsid%%,*})
 
     cd $fitdir
 
@@ -61,7 +62,7 @@ setplot xlog off
 iplot data resid
 rescale x $emin $emax
 label otop CONTAMID=$CONTAMID, Gain correction applied to the data
-label top $chip, ObsID $obsid, C-stat=$cstat, dof=$dof, Q-stat=$chi, reduced Q stat=$redchi
+label top $chip ObsID=$obsid Date=$date C-stat=$cstat, dof=$dof, Q-stat=$chi, reduced Q stat=$redchi
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"

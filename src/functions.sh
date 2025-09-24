@@ -11,6 +11,15 @@ obsids()
     \grep '^[0-9]' "${srcdir}/../data/obsids/$det.lst" | cut -f 1 #| tail -1
 }
 
+obsid_date()
+{
+    local obsids="$@"
+    for o in $obsids; do
+	o=$(printf %05d $((10#"$o")))
+	\grep --no-filename ^$o "$datadir/obs_info/"[is]3.txt  | cut -f2
+    done
+}
+
 psmerge_xspec()
 {
     [[ "$DET" =~ ^[is]3$ ]] || {
