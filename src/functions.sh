@@ -23,12 +23,12 @@ obsid_date()
 psmerge_xspec()
 {
     [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 2>&1
+	echo "DET must be i3|s3" 1>&2
 	return 1
     }
 
     [ -z "$CONTAMID" ] && {
-	echo "CONTAMID must be set" 2>&1
+	echo "CONTAMID must be set" 1>&2
 	return 1
     }
 
@@ -75,12 +75,12 @@ psmerge_xspec()
 psmerge_gain_corrections()
 {
     [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 2>&1
+	echo "DET must be i3|s3" 1>&2
 	return 1
     }
 
     [ -z "$CONTAMID" ] && {
-	echo "CONTAMID must be set" 2>&1
+	echo "CONTAMID must be set" 1>&2
 	return 1
     }
 
@@ -107,13 +107,14 @@ psmerge_gain_corrections()
     rm "$psfiletmp"
 }
 
+# see /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/combine_spectra.com
 combine_spectra()
 {
     [ $# -eq 0 ] && return
-    # [ $# -eq 1 ] || {
-    # 	echo "Usage: $0 combined_obsid=obsid1,obsid2,..."
-    # 	return 1
-    # }
+    [ $# -eq 1 ] || {
+	echo "Usage: $0 combined_obsid=obsid1,obsid2,..." 1>&2
+	return 1
+    }
 
     local outobs inobs
     read outobs inobs <<<$(echo "$1" | perl -F= -anle 'print "$F[0] $F[1]"')
