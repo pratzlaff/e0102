@@ -62,7 +62,7 @@ setplot xlog off
 iplot data resid
 rescale x $emin $emax
 label otop CONTAMID=$CONTAMID, Gain correction applied to the data
-label top $chip ObsID=$obsid Date=$date C-stat=$cstat, dof=$dof, Q-stat=$chi, reduced Q stat=$redchi
+label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-stat=$redchi
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"

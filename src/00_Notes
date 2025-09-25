@@ -36,9 +36,9 @@ for det in $dets; do
     export DET=$det
     obsids=$(obsids $det)
 
-    DET=$det ./obs_info | tee $datadir/obs_info/$det.txt
+    ./obs_info | tee $datadir/obs_info/$det.txt
 
-    ./specextract
+    false && ./specextract
 
     ./gainfit
     gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"

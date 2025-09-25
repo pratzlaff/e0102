@@ -5,8 +5,10 @@ for i=0,n_elements(obsids)-1 do begin
    obsids[i] = string(obsids[i], format='%05d')
 endfor
 
+contamid=getenv('CONTAMID')
+
 ; get gainfit slope and offset
-fit_results='/data/legs/rpete/data/e0102/fits/'+getenv('CONTAMID')+'/gainfits_'+getenv('DET')+'.txt'
+fit_results='/data/legs/rpete/data/e0102/fits/'+contamid+'/gainfits_'+getenv('DET')+'.txt'
 print,fit_results
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
@@ -17,7 +19,7 @@ readcol,'/data/legs/rpete/flight/e0102/data/line_energies.txt',param,old
 
 for j=0,n_elements(obsids)-1 do begin
 
-    fit_dir='/data/legs/rpete/data/e0102/fits/CALDB/'+obsids[j]
+    fit_dir='/data/legs/rpete/data/e0102/fits/'+contamid+'/'+obsids[j]
 
     new=old*slope[j]+offset[j] 
     get_lun, lun
