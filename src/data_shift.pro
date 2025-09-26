@@ -6,21 +6,22 @@ args=command_line_args()
 
 datadir='/data/legs/rpete/data/e0102'
 fitdir=datadir+'/fits/'+getenv('CONTAMID')
+resdir=fitdir+'/results'
 
 ;; read in obs info to get data mode
 obsinfo=args[0]
 readcol,obsinfo,obsids,date,chx,chy,node,exp,rdmode,datamode,comment='#',format='(A5,F7.2,F5.1,F5.1,I1,F8.2,A5,A6)'
 
 get_lun, lun
-openw,lun,fitdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
+openw,lun,resdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
 printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi'
 
 ;; get best-fit energies:
-fit_results=fitdir+'/linefits_'+getenv('DET')+'.txt'
+fit_results=resdir+'/linefits_'+getenv('DET')+'.txt'
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,ne10_energy,ne10lo,ne10hi,ne9_energy,ne9lo,ne9hi,o8_energy,o8lo,o8hi,o7_energy,o7lo,o7hi,comment='#'
 
 ;; get gainfit slope and offset:
-fit_results=fitdir+'/gainfits_'+getenv('DET')+'.txt'
+fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
 ;; set up things for plot

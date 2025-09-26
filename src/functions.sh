@@ -54,7 +54,7 @@ psmerge_xspec()
     [ "$type" = shift ] && {
 	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/combine/$DET")
     }
-    psfiletmp="$datadir/fits/$CONTAMID/${type}fits_${DET}.ps.tmp"
+    psfiletmp="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.ps.tmp"
     psfile="${psfiletmp%%.tmp}"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
@@ -90,7 +90,7 @@ psmerge_gain_corrections()
 	obsids=$(obsids $DET)
     }
 
-    psfiletmp="$datadir/fits/$CONTAMID/gain_corrections_${DET}.ps.tmp"
+    psfiletmp="$datadir/fits/$CONTAMID/results/gain_corrections_${DET}.ps.tmp"
     psfile="${psfiletmp%%.tmp}"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))

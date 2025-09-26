@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
-from pprint import pprint
 import re
 import sys
 
@@ -174,16 +173,6 @@ def combine(args):
     obsid = [f'{int(o):05d}' for o in obsid]
     obsid2 = [f'{int(o):05d}' for o in obsid2]
 
-    do_pprint=False
-
-    if do_pprint:
-        pprint(obsid)
-        pprint(date)
-        pprint(chy)
-        pprint(node)
-        pprint(obsid2)
-        pprint(data)
-
     combinedf=f'{srcdir}/../data/combine/{os.environ["DET"]}'
     with open(combinedf) as cfile:
         for line in cfile:
@@ -192,8 +181,6 @@ def combine(args):
             match = re.search(r'^(\d{5})=(.*)$', line)
             combined = match.group(1)
             to_combine = match.group(2).split(',')
-            pprint(to_combine)
-            pprint(combined)
             for o in to_combine[:-1]:
                 index = obsid.index(o)
                 obsid.pop(index)
@@ -209,14 +196,6 @@ def combine(args):
                 for key1 in data:
                     for key2 in data[key1]:
                         data[key1][key2] = np.delete(data[key1][key2], index)
-
-    if do_pprint:
-        pprint(obsid)
-        pprint(date)
-        pprint(chy)
-        pprint(node)
-        pprint(obsid2)
-        pprint(data)
 
     return date, chy, node, data
 

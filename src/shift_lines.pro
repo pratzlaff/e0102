@@ -6,9 +6,10 @@ for i=0,n_elements(obsids)-1 do begin
 endfor
 
 contamid=getenv('CONTAMID')
+resdir='/data/legs/rpete/data/e0102/fits/'+contamid+'/results'
 
 ; get gainfit slope and offset
-fit_results='/data/legs/rpete/data/e0102/fits/'+contamid+'/gainfits_'+getenv('DET')+'.txt'
+fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
 print,fit_results
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 

@@ -62,16 +62,16 @@ for det in i3 s3; do
   obsids=$(obsids $det)
 
   # generate a new observation info file
-
   src/obs_info | tee "$datadir/obs_info/$det.txt"
 
-  # extract spectra for each ObsID, at this point an alternative contamination file
-  # can used by assigning the CONTAMFILE environmental variable. For
-  # such a case, it would be assumed that a different CONTAMID would be used,
-  # other than the output of src/ciaostr, as the output will be
-  # "$datadir/fits/CONTAMID/$obsid"
+  # extract spectra for each ObsID, output files will be placed in
+  # "$datadir/fits/$CONTAMID/$obsid"
 
   src/specextract
+
+  # create a location for fit results
+  resdir="$datadir/fits/$CONTAMID/results"
+  mkdir -p "$resdir"
 
   # perform the gain fits for each ObsID, compile the results, plot them all. Again,
   # output files will go to "$datadir/fits/CONTAMID/$obsid".
@@ -80,37 +80,50 @@ for det in i3 s3; do
   # data/NoLine_v1.3.1_coco.fits and
   # data/NoLine_v1.3.1_line.fits are placed in $HEADAS/../spectra/modelData
 
+  # fit gain
   src/gainfit
-  gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"
+  gainfits_txt="$resdir/gainfits_${DET}.txt"
   perl src/compile_gainfit_results.pl $obsids | tee "$gainfits_txt"
   src/plot_gainfits "$gainfits_txt"
   psmerge_xspec gain
 
-    echo '.run shift_lines.pro'  | gdl -args $obsids
+  # shift model line energies
+  cd src
+  echo '.run shift_lines.pro'  | gdl -args $obsids
+  cd -
 
+  # fit line energies
   src/linefit
-  linefits_txt="$datadir/fits/$CONTAMID/linefits_${DET}.txt"
+  linefits_txt="$resdir/linefits_${DET}.txt"
   perl src/compile_linefit_results.pl $obsids | tee "$linefits_txt"
   src/plot_linefits "$linefits_txt"
   psmerge_xspec line
 
+  # shift energies
   cd src
   echo '.run data_shift.pro'  | gdl -args "$datadir/obs_info/$DET.txt"
-  psmerge_gain_corrections
   cd -
+  psmerge_gain_corrections
 
+  # create spectra with shifted energies
   src/shift_pi
 
+  # fit shifted line normalizations
   src/shiftfit
-  shiftfits_txt="$datadir/fits/$CONTAMID/shiftfits_${DET}.txt"
+  shiftfits_txt="$resdir/shiftfits_${DET}.txt"
   perl src/compile_shiftfit_results.pl $obsids | tee "$shiftfits_txt"
   src/plot_shiftfits "$shiftfits_txt"
   psmerge_xspec shift
 
+  # plot fitted parameters vs time
   python3 \
     src/plot_fit_results.py \
     /data/legs/rpete/data/e0102/obs_info/$DET.txt \
     "$shiftfits_txt" \
-    -p "$datadir/fits/$CONTAMID/params_${DET}.pdf"
+    -p "$resdir/params_${DET}.pdf"
 done
 ```
+
+In order to test a new contamination file, set environment variable
+`$CONTAMFILE` before running specextract, and generally this will be used
+in conjunction with a corresponding descriptive `$CONTAMID`.
