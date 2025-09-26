@@ -125,5 +125,5 @@ done
 ```
 
 In order to test a new contamination file, set environment variable
-`$CONTAMFILE` before running specextract, and generally this will be used
-in conjunction with a corresponding descriptive `$CONTAMID`.
+`CONTAMFILE` before running specextract, and generally this will be used
+in conjunction with a corresponding descriptive `CONTAMID`.
