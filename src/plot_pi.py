@@ -1,17 +1,20 @@
 import argparse
 import astropy.io.fits
 import matplotlib.pyplot as plt
+import numpy as np
 
 def read_pi(pifile):
     with astropy.io.fits.open(pifile) as hdulist:
         data = hdulist['spectrum'].data
-        return data['pi'], data['count_rate']
+        hdr = hdulist['spectrum'].header
+        return data['pi'], data['count_rate'], hdr['exposure']
 
 def plot_pi(args):
     fig, ax = plt.subplots()
     for pifile in args.pifiles:
-        pi, rate = read_pi(pifile)
-        plt.plot(pi, rate, label=pifile)
+        pi, rate, exposure = read_pi(pifile)
+        rate_err=np.sqrt(rate/exposure)
+        plt.errorbar(pi, rate, yerr=rate_err, fmt='.', label=pifile)
     plt.legend()
     plt.tight_layout()
 
