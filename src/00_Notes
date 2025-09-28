@@ -31,17 +31,19 @@ false && {
     done
 }
 
-dets='i3 s3'
-for det in $dets; do
+time for det in i3 s3; do
     export DET=$det
     obsids=$(obsids $det)
+
+    resdir="$datadir/fits/$CONTAMID/results"
+    mkdir -p "$resdir"
 
     ./obs_info | tee $datadir/obs_info/$det.txt
 
     false && ./specextract
 
     ./gainfit
-    gainfits_txt="$datadir/fits/$CONTAMID/gainfits_${DET}.txt"
+    gainfits_txt="$resdir/gainfits_${DET}.txt"
     perl ./compile_gainfit_results.pl $obsids | tee "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
     psmerge_xspec gain
@@ -49,7 +51,7 @@ for det in $dets; do
     echo '.run shift_lines.pro'  | gdl -args $obsids
 
     ./linefit
-    linefits_txt="$datadir/fits/$CONTAMID/linefits_${DET}.txt"
+    linefits_txt="$resdir/linefits_${DET}.txt"
     perl ./compile_linefit_results.pl $obsids | tee "$linefits_txt"
     ./plot_linefits "$linefits_txt"
     psmerge_xspec line
@@ -60,7 +62,7 @@ for det in $dets; do
     ./shift_pi
 
     ./shiftfit
-    shiftfits_txt="$datadir/fits/$CONTAMID/shiftfits_${DET}.txt"
+    shiftfits_txt="$resdir/shiftfits_${DET}.txt"
     perl ./compile_shiftfit_results.pl $obsids | tee "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"
     psmerge_xspec shift
@@ -69,6 +71,6 @@ for det in $dets; do
 	./plot_fit_results.py \
 	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
 	"$shiftfits_txt" \
-	-p "$datadir/fits/$CONTAMID/params_${DET}.pdf"
+        -p "$resdir/params_${DET}.pdf"
 
 done

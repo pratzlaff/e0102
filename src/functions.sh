@@ -22,6 +22,7 @@ obsid_date()
 
 psmerge_xspec()
 {
+    local obsids
     [[ "$DET" =~ ^[is]3$ ]] || {
 	echo "DET must be i3|s3" 1>&2
 	return 1

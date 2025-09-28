@@ -84,7 +84,7 @@ EOP
 
 for obsid in $obsids; do
     fit_obsid $obsid
-    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/* || :)
+    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/[is]3 || :)
     [ -n "$match" ] && {
 	combobs=$(perl -F= -anle 'print $F[0]' <<<$match)
 	fit_obsid $combobs

@@ -31,7 +31,7 @@ for my $obsid (@obsids) {
 
   get_results($obsid);
 
-  my @match = `grep --no-filename ",$obsid\$" "$srcdir/../data/combine/"*`;
+  my @match = `grep --no-filename ",$obsid\$" "$srcdir/../data/combine/"[is]3`;
   @match and $obsid = +(split '=', $match[0])[0], get_results($obsid);
 
 }

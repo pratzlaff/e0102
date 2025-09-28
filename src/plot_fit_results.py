@@ -40,7 +40,7 @@ def read_shiftfits(shiftfits):
                                                   8,10,11,
                                                   12,14,15,
                                                   16,18,19,
-                                                  22]
+                                                  -2]
                  )
     return obsid, {'cons':{'val':cons, 'lo':conslo, 'hi':conshi},
                    'O7':{'val':o7, 'lo':o7lo, 'hi':o7hi},
@@ -110,7 +110,7 @@ def make_plots(args, date, data, chy, node):
 
         xlim = ax.get_xlim()
  
-        if key != 'redchi':
+        if key in iachec:
             ax.plot(xlim, [iachec[key]['val']]*2, 'k-')
             ax.plot(xlim, [iachec[key]['lo']]*2, 'k:')
             ax.plot(xlim, [iachec[key]['hi']]*2, 'k:')
@@ -135,7 +135,7 @@ def make_plots(args, date, data, chy, node):
         leg = Legend(ax, lines[3:], [f'Node {i}' for i in has_nodes], loc='upper left', frameon=False)
         ax.add_artist(leg)
 
-        if key != 'redchi':
+        if key in iachec:
             line = ax.plot(0, 0, '-', color='k')
             label = 'IACHEC value'
             leg = Legend(ax, line, [label], loc='lower left', frameon=False)
