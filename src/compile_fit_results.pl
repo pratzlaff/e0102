@@ -112,9 +112,9 @@ sub get_results {
   # e.g.,
   #Model Model Component  Parameter  Unit     Value
   # par  comp
-  #   1    1   constant   factor              1.14149      +/-  2.71383E-02  
-  #  29   11   gaussian   LineE      keV      1.32855      +/-  6.12033E-03  
-  #  61   21   gaussian   norm                1.52427E-03  +/-  1.42802E-04  
+  #   1    1   constant   factor              1.14149      +/-  2.71383E-02
+  #  29   11   gaussian   LineE      keV      1.32855      +/-  6.12033E-03
+  #  61   21   gaussian   norm                1.52427E-03  +/-  1.42802E-04
 
 
   my %comps = (
@@ -129,6 +129,7 @@ sub get_results {
 		 O8en     => [116, 40, 'LineE'],
 		 O7norm   => [127, 43, 'norm'],
 		 O7en     => [119, 41, 'LineE'],
+		 Mgnorm   => [37, 13, 'norm'],
 		);
   my (%val, %err, %lo, %hi, %stat);
 
@@ -138,7 +139,7 @@ sub get_results {
 
     my @F = split (/\s+/, $_);
     @F > 4 or next;
-	    
+
     if (@F >= 8) {
       for my $key (keys %comps) {
 	if ($F[1] eq $comps{$key}[0] and
@@ -181,7 +182,7 @@ sub get_results {
       }
     }
 
-  }	
+  }
   close (LOG);
 
   my @h = \(%val, %err, %lo, %hi);
@@ -198,15 +199,6 @@ sub get_results {
 		   line => \&print_fit_linefit,
 		   shift => \&print_fit_shiftfit,
 		  );
-
-
-  if (0) {
-    print Dumper \%val;
-    print Dumper \%err;
-    # print Dumper \%lo;
-    # print Dumper \%hi;
-    # print Dumper \%stat;
-  }
 
   $print_fit{$type}->($obs, \(%val, %err, %lo, %hi, %stat));
 
@@ -273,7 +265,7 @@ sub print_fit_shiftfit {
   my @fmt = ('%5s', ('%5.3f')x3);
   my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
 
-  for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
+  for my $p (qw/ Ne10norm Ne9norm O8norm O7norm Mgnorm /) {
     if (exists $val->{$p}) {
       push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
       push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;

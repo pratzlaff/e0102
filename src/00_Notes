@@ -44,7 +44,7 @@ time for det in i3 s3; do
 
     ./gainfit
     gainfits_txt="$resdir/gainfits_${DET}.txt"
-    perl ./compile_gainfit_results.pl $obsids | tee "$gainfits_txt"
+    perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
     psmerge_xspec gain
 
@@ -52,7 +52,7 @@ time for det in i3 s3; do
 
     ./linefit
     linefits_txt="$resdir/linefits_${DET}.txt"
-    perl ./compile_linefit_results.pl $obsids | tee "$linefits_txt"
+    perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
     ./plot_linefits "$linefits_txt"
     psmerge_xspec line
 
@@ -63,7 +63,7 @@ time for det in i3 s3; do
 
     ./shiftfit
     shiftfits_txt="$resdir/shiftfits_${DET}.txt"
-    perl ./compile_shiftfit_results.pl $obsids | tee "$shiftfits_txt"
+    perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"
     psmerge_xspec shift
 
