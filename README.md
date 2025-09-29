@@ -56,7 +56,7 @@ which are written to `"$datadir"/images`.
 
 Now for each of i3 and s3, generate the fits for current CalDB.
 ```
-for det in i3 s3; do
+time for det in i3 s3; do
 
   export DET=$det
   obsids=$(obsids $det)
@@ -83,7 +83,7 @@ for det in i3 s3; do
   # fit gain
   src/gainfit
   gainfits_txt="$resdir/gainfits_${DET}.txt"
-  perl src/compile_gainfit_results.pl $obsids | tee "$gainfits_txt"
+  perl src/compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
   src/plot_gainfits "$gainfits_txt"
   psmerge_xspec gain
 
@@ -95,7 +95,7 @@ for det in i3 s3; do
   # fit line energies
   src/linefit
   linefits_txt="$resdir/linefits_${DET}.txt"
-  perl src/compile_linefit_results.pl $obsids | tee "$linefits_txt"
+  perl src/compile_fit_results.pl line $obsids | tee "$linefits_txt"
   src/plot_linefits "$linefits_txt"
   psmerge_xspec line
 
@@ -111,7 +111,7 @@ for det in i3 s3; do
   # fit shifted line normalizations
   src/shiftfit
   shiftfits_txt="$resdir/shiftfits_${DET}.txt"
-  perl src/compile_shiftfit_results.pl $obsids | tee "$shiftfits_txt"
+  perl src/compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
   src/plot_shiftfits "$shiftfits_txt"
   psmerge_xspec shift
 
