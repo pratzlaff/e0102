@@ -53,6 +53,7 @@ print_header($type);
 for my $obsid (@obsids) {
 
   get_results($obsid);
+  $type eq 'shift' || next;
 
   my @match = `grep --no-filename ",$obsid\$" "$opts{srcdir}/../data/combine/"[is]3`;
   @match and $obsid = +(split '=', $match[0])[0], get_results($obsid);
@@ -106,7 +107,7 @@ sub get_results {
   my $obs=shift;
   $obs =~ s/^0*//g;
   $obs = sprintf '%05d', $obs;
-  my $infile = "$opts{datadir}/fits/".$ENV{CONTAMID}."/$obs/${obs}_shiftfit.log";
+  my $infile = "$opts{datadir}/fits/".$ENV{CONTAMID}."/$obs/${obs}_${type}fit.log";
 
   # e.g.,
   #Model Model Component  Parameter  Unit     Value
@@ -127,7 +128,7 @@ sub get_results {
 		 O8norm   => [118, 40, 'norm'],
 		 O8en     => [116, 40, 'LineE'],
 		 O7norm   => [127, 43, 'norm'],
-		 O7en     => [125, 43, 'LineE'],
+		 O7en     => [119, 41, 'LineE'],
 		);
   my (%val, %err, %lo, %hi, %stat);
 
@@ -183,7 +184,10 @@ sub get_results {
   }	
   close (LOG);
 
-  $_->{O7norm}*=2.09009 for \(%val, %err, %lo, %hi);
+  my @h = \(%val, %err, %lo, %hi);
+  for my $h (@h) {
+    exists $h->{O7norm} and $h->{O7norm}*=2.09009;
+  }
 
 # 20220402, XSPEC no longer reports redchi, so I must calculate it
 #
@@ -196,11 +200,14 @@ sub get_results {
 		  );
 
 
-  # print Dumper \%val;
-  # print Dumper \%err;
-  # print Dumper \%lo;
-  # print Dumper \%hi;
-  # print Dumper \%stat;
+  if (0) {
+    print Dumper \%val;
+    print Dumper \%err;
+    # print Dumper \%lo;
+    # print Dumper \%hi;
+    # print Dumper \%stat;
+  }
+
   $print_fit{$type}->($obs, \(%val, %err, %lo, %hi, %stat));
 
 }
@@ -208,17 +215,26 @@ sub get_results {
 sub print_fit_gainfit {
   my ($obs, $val, $err, $lo, $hi, $stat) = @_;
 
-  my @fmt = ('%5s', ('%5.3f')x3);
-  my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
+  my @fmt = qw/ %5s %5.3f /;
+  my @p = ($obs, $val->{Cons});
+
   for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p}) {
-      push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
-      push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;
+      push(@p, map { $_->{$p} } ($val, $err));
+      push @fmt, qw/ %8.3e %6.1e /;
     }
   }
 
   push @p, @{$stat}{qw/ cstat dof redchi chi /};
   push @fmt, qw/ %8.3f %3.0f %5.2f %6.1f /;
+
+  for my $p (qw/ slope offset /) {
+    if (exists $val->{$p}) {
+      push(@p, map { $_->{$p} } ($val, $err));
+    }
+  }
+  push @fmt, qw/ %5.3f %6.1e %8.3e %6.1e /;
+
 
   printf join("\t", @fmt)."\n", @p;
 
@@ -242,8 +258,8 @@ sub print_fit_linefit {
 
   for my $p (qw/ Ne10en Ne9en O8en O7en /) {
     if (exists $val->{$p}) {
-      push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
-      push @fmt, qw/ %7.5e %7.5e %7.5e %7.5e /;
+      push(@p, map { $_->{$p} } ($val, $lo, $hi));
+      push @fmt, qw/ %7.5f %7.5f %7.5f /;
     }
   }
 
