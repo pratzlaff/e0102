@@ -31,6 +31,9 @@ false && {
     done
 }
 
+export CONTAMID=$(./ciaostr)
+export FITMG=
+
 time for det in i3 s3; do
     export DET=$det
     obsids=$(obsids $det)

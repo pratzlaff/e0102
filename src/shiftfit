@@ -32,6 +32,11 @@ heainit
 
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
+[ "$FITMG" = 'yes' ] && {
+    thaw37='thaw 37'
+    conf37='error max 4.0 1. 37'
+}
+
 fit_obsid() {
     obsid=$(printf %05d $((10#"$1")))
     fitdir="$datadir/fits/$CONTAMID/$obsid"
@@ -57,6 +62,7 @@ ignore $emax-**
 @$model
 statistic cstat
 thaw 1
+$thaw37
 fit
 fit
 fit
@@ -69,6 +75,7 @@ cpd /null
 show free
 show fit
 error max 4.0 1. 1
+$conf37
 error max 4.0 1. 61
 error max 4.0 1. 67
 error max 4.0 1. 118

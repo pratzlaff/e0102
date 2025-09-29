@@ -48,8 +48,6 @@ my $model="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm";
 my $emin="0.35";
 my $emax="1.6";
 
-print_header($type);
-
 for my $obsid (@obsids) {
 
   get_results($obsid);
@@ -74,7 +72,7 @@ sub print_header {
 		line => \&print_header_linefit,
 		shift => \&print_header_shiftfit,
 	       );
-  $print_subs{$type}->();
+  $print_subs{$type}->(@_);
 }
 
 sub print_header_gainfit {
@@ -94,12 +92,17 @@ sub print_header_linefit {
 }
 
 sub print_header_shiftfit {
+  my $val = shift;
   print "# fit results for ${chip} with CONTAMID=$ENV{CONTAMID} and gain adjustment (data shifted)\n";
   print "# fitting between ${emin} - ${emax} keV\n";
   print "# model: ${model}\n";
   print "# lo and hi give 1-sigma confidence interval\n";
   print "#\n";
-  print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
+  if (exists $val->{Mgnorm}) {
+    print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tMg\tMgerr\tMglo\tMghi\tCstat\tDof\tRedChi\tChi\n";
+  } else {
+    print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
+  }
 }
 
 sub get_results {
@@ -200,6 +203,7 @@ sub get_results {
 		   shift => \&print_fit_shiftfit,
 		  );
 
+  print_header($type, \%val);
   $print_fit{$type}->($obs, \(%val, %err, %lo, %hi, %stat));
 
 }

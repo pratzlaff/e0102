@@ -26,6 +26,14 @@ def read_obsinfo(obsinfo):
     obsid, date, chy, node = np.loadtxt(obsinfo, unpack=True, usecols=(0,1,3,4))
     return obsid, date, chy, node
 
+def grep_header(expr, shiftfits):
+    with open(shiftfits, 'r') as fh:
+        for line in fh:
+            if not re.match('^#', line):
+                return False
+            if re.search(expr, line):
+                return True
+
 def read_shiftfits(shiftfits):
     obsid, \
     cons, conslo, conshi, \
@@ -33,6 +41,7 @@ def read_shiftfits(shiftfits):
     ne9, ne9lo, ne9hi, \
     o8, o8lo, o8hi, \
     o7, o7lo, o7hi, \
+    mg, mglo, mghi, \
     redchi \
     = np.loadtxt(shiftfits, unpack=True, usecols=[0,
                                                   1,2,3,
@@ -40,15 +49,22 @@ def read_shiftfits(shiftfits):
                                                   8,10,11,
                                                   12,14,15,
                                                   16,18,19,
+                                                  20,22,23,
                                                   -2]
                  )
-    return obsid, {'cons':{'val':cons, 'lo':conslo, 'hi':conshi},
-                   'O7':{'val':o7, 'lo':o7lo, 'hi':o7hi},
-                   'O8':{'val':o8, 'lo':o8lo, 'hi':o8hi},
-                   'Ne9':{'val':ne9, 'lo':ne9lo, 'hi':ne9hi},
-                   'Ne10':{'val':ne10, 'lo':ne10lo, 'hi':ne10hi},
-                   'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
-                   }
+    data = {'cons':{'val':cons, 'lo':conslo, 'hi':conshi},
+            'O7':{'val':o7, 'lo':o7lo, 'hi':o7hi},
+            'O8':{'val':o8, 'lo':o8lo, 'hi':o8hi},
+            'Ne9':{'val':ne9, 'lo':ne9lo, 'hi':ne9hi},
+            'Ne10':{'val':ne10, 'lo':ne10lo, 'hi':ne10hi},
+            'Mg':{'val':mg, 'lo':mglo, 'hi':mghi},
+            'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
+            }
+
+    if not grep_header('Mg', shiftfits):
+        del data['Mg']
+
+    return obsid, data
 
 def make_plots(args, date, data, chy, node):
 
