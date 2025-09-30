@@ -3,7 +3,7 @@ E0102-72.3 Fitting
 
 When new E0102 observations become available, begin by adding them
 to the list of all ObsIDs in `data/obsids/all.lst`, then download and reprocess
-to current CalDB with
+using current CalDB with
 ```
 ciao
 export CONTAMID=$(src/ciaostr)
@@ -25,19 +25,19 @@ src/obs_info | tee "$datadir/obs_info/$DET.txt"
 ```
 
 Note which detectors are used for each ObsID, and add them to
-`data/obsids/[is].lst`, as appropriate. If any are split,
+`data/obsids/[is]3.lst`, as appropriate. If any are split,
 define a new combination in `data/combine/[is]3`.
 
-Create new background region files for each new ObsID in `data/reg/bkg`.
+For each new ObsID, create a background region file in `data/reg/bkg`.
 This is easiest done by copying an existing region file from a similar
-detector position, find the appropriate evt2 file,
+detector position, then find the appropriate evt2 file,
 ```
 obsid=12345
 evt2=$(\ls $datadir/$obsid/repro/acisf${obsid}_repro_evt2.fits)
 bkgreg=data/reg/bkg/${obsid}_bkg.reg
 srcreg=data/reg/src.reg
 ```
-then edit the region file while continually re-running
+and finally, edit the region file while continually re-running
 ```
 ds9 \
   "$evt2" \
@@ -48,13 +48,13 @@ ds9 \
   -bin factor 2 \
   -cmap heat
 ```
-Next, generation JPG images of the new observations with
+Generate JPG images of source and background regions with
 ```
 src/images
 ```
 which are written to `"$datadir"/images`.
 
-Now for each of i3 and s3, generate the fits for current CalDB.
+For I3 and S3, perform the fits. 
 ```
 time for det in i3 s3; do
 
@@ -126,10 +126,10 @@ done
 
 To test a new contamination file in `specextract`, set environment
 variable `CONTAMFILE`. Generally this will be used in conjunction
-with a corresponding `CONTAMID` environment variable.
+with a correspondingly descriptive `CONTAMID` environment variable.
 
 To use only -120C `p2_resp` files, set environmental variable
-`RESP120C=yes` for the specextract run.
+`RESP120C=yes` for the `specextract` run.
 
 To fit the Mg complex normalization in `shiftfits`, set environment
 variable `FITMG=yes`.
