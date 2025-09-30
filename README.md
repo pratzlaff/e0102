@@ -124,6 +124,12 @@ time for det in i3 s3; do
 done
 ```
 
-In order to test a new contamination file, set environment variable
-`CONTAMFILE` before running specextract, and generally this will be used
-in conjunction with a corresponding descriptive `CONTAMID`.
+To test a new contamination file in `specextract`, set environment
+variable `CONTAMFILE`. Generally this will be used in conjunction
+with a corresponding `CONTAMID` environment variable.
+
+To use only -120C `p2_resp` files, set environmental variable
+`RESP120C=yes` for the specextract run.
+
+To fit the Mg complex normalization in `shiftfits`, set environment
+variable `FITMG=yes`.

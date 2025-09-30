@@ -32,6 +32,7 @@ false && {
 }
 
 export CONTAMID=$(./ciaostr)
+export RESP120C=
 export FITMG=
 
 time for det in i3 s3; do

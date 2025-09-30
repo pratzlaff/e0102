@@ -58,7 +58,7 @@ setplot energy
 setplot xlog off
 iplot data resid
 rescale x $emin $emax
-label otop CONTAMID=$CONTAMID, "Big-4" line energy fits
+label otop $CONTAMID, "Big-4" line energy fits
 label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-stat=$redchi
 hardcopy $psfile/cps
 EOP

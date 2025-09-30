@@ -1,0 +1,27 @@
+#! /bin/bash
+
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+
+. "$SCRIPTDIR/tmppdir.sh"
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+    reprodir="$datadir/$obsid/repro"
+    evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
+    evt2_120c="${evt2/evt2.fits/evt2-120C.fits}"
+
+    cp -a "$evt2" "$evt2_120c"
+
+    dmhedit "$evt2_120c" none add fp_temp 153
+done
+

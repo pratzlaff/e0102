@@ -34,6 +34,7 @@ for obsid in $obsids; do
     fitdir="$datadir/fits/$CONTAMID/$obsid"
     bkgreg="$datadir/reg/bkg/${obsid}_bkg.reg"
     evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
+    [ "$RESP120C" = yes ] &&  evt2="${evt2/evt2.fits/evt2-120C.fits}"
     asol_stack=$(\ls -1 "$reprodir/../primary/"pcad*asol1.fits*  | perl -le 'chomp(@l=<>); print join ",", @l')
     pbk=$(\ls -1 "$reprodir/"*pbk0.fits*)
     msk=$(\ls -1 "$reprodir/acisf${obsid}"_*_msk1.fits*)
