@@ -1,0 +1,22 @@
+#! /bin/bash
+
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao 1>/dev/null
+
+for obsid in $obsids; do
+    obsid=$(printf %05d $((10#"$obsid")))
+    reprodir="$datadir/$obsid/repro"
+    evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
+    fp_temp=$(dmkeypar "$evt2" fp_temp ec+)
+    printf "%.2f\t%s\n" $fp_temp $obsid
+done | sort | perl -anle 'print "$F[1]\t$F[0]"'
+
