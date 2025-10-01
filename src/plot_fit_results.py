@@ -16,6 +16,7 @@ iachec = {
     'O8':{'val':0.004393},
     'Ne9':{'val':0.001381},
     'Ne10':{'val':0.001378},
+    'Mg':{'val':0.000108671},
 }
 for key in iachec:
     for limit in 'lo', 'hi':
