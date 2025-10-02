@@ -54,9 +54,10 @@ src/images
 ```
 which are written to `"$datadir"/images`.
 
-For I3 and S3, perform the fits. 
+For I3 and S3, perform the fits, parallelized where possible.
 ```
-time for det in i3 s3; do
+nproc=$(nproc)
+for det in i3 s3; do
 
   export DET=$det
   obsids=$(obsids $det)
@@ -66,8 +67,7 @@ time for det in i3 s3; do
 
   # extract spectra for each ObsID, output files will be placed in
   # "$datadir/fits/$CONTAMID/$obsid"
-
-  src/specextract
+  parallel -j $nproc src/specextract ::: $obsids
 
   # create a location for fit results
   resdir="$datadir/fits/$CONTAMID/results"
@@ -81,7 +81,7 @@ time for det in i3 s3; do
   # data/NoLine_v1.3.1_line.fits are placed in $HEADAS/../spectra/modelData
 
   # fit gain
-  src/gainfit
+  parallel -j $nproc src/gainfit ::: $obsids
   gainfits_txt="$resdir/gainfits_${DET}.txt"
   perl src/compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
   src/plot_gainfits "$gainfits_txt"
@@ -93,7 +93,7 @@ time for det in i3 s3; do
   cd -
 
   # fit line energies
-  src/linefit
+  parallel -j $nproc src/linefit ::: $obsids
   linefits_txt="$resdir/linefits_${DET}.txt"
   perl src/compile_fit_results.pl line $obsids | tee "$linefits_txt"
   src/plot_linefits "$linefits_txt"
@@ -106,10 +106,10 @@ time for det in i3 s3; do
   psmerge_gain_corrections
 
   # create spectra with shifted energies
-  src/shift_pi
+  parallel -j $nproc src/shift_pi ::: $obsids
 
   # fit shifted line normalizations
-  src/shiftfit
+  parallel -j $nproc src/shiftfit ::: $obsids
   shiftfits_txt="$resdir/shiftfits_${DET}.txt"
   perl src/compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
   src/plot_shiftfits "$shiftfits_txt"
