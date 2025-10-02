@@ -5,8 +5,9 @@ for i=0,n_elements(obsids)-1 do begin
    obsids[i] = string(obsids[i], format='%05d')
 endfor
 
+spawn, './datadir', datadir
 contamid=getenv('CONTAMID')
-resdir='/data/legs/rpete/data/e0102/fits/'+contamid+'/results'
+resdir=datadir+'/fits/'+contamid+'/results'
 
 ; get gainfit slope and offset
 fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
@@ -14,13 +15,13 @@ print,fit_results
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
 ; line energies in IACHEC E0102 model
-readcol,'/data/legs/rpete/flight/e0102/data/line_energies.txt',param,old
+readcol,'../data/line_energies.txt',param,old
 
 ; printf to stdout
 
 for j=0,n_elements(obsids)-1 do begin
 
-    fit_dir='/data/legs/rpete/data/e0102/fits/'+contamid+'/'+obsids[j]
+    fit_dir=datadir'/fits/'+contamid+'/'+obsids[j]
 
     new=old*slope[j]+offset[j] 
     get_lun, lun

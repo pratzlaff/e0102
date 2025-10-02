@@ -31,22 +31,28 @@ false && {
     done
 }
 
-export CONTAMID=$(./ciaostr)
+export CONTAMID=$(./ciaostr)_fitMg
 export RESP120C=
-export FITMG=
+export FITMG=yes
+
+nproc=16
+
+datadir=$(./datadir)
 
 time for det in i3 s3; do
     export DET=$det
     obsids=$(obsids $det)
+
+    [ "$RESP120C" = yes -a "$DET" = s3 ] && continue
 
     resdir="$datadir/fits/$CONTAMID/results"
     mkdir -p "$resdir"
 
     ./obs_info | tee $datadir/obs_info/$det.txt
 
-    false && ./specextract
+    false && parallel -j $nproc ./specextract ::: $obsids
 
-    ./gainfit
+    parallel -j $nproc ./gainfit ::: $obsids
     gainfits_txt="$resdir/gainfits_${DET}.txt"
     perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
@@ -54,7 +60,7 @@ time for det in i3 s3; do
 
     echo '.run shift_lines.pro'  | gdl -args $obsids
 
-    ./linefit
+    parallel -j $nproc ./linefit ::: $obsids
     linefits_txt="$resdir/linefits_${DET}.txt"
     perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
     ./plot_linefits "$linefits_txt"
@@ -63,9 +69,9 @@ time for det in i3 s3; do
     echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
     psmerge_gain_corrections
 
-    ./shift_pi
+    parallel -j $nproc ./shift_pi ::: $obsids
 
-    ./shiftfit
+    parallel -j $nproc ./shiftfit ::: $obsids
     shiftfits_txt="$resdir/shiftfits_${DET}.txt"
     perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"
@@ -73,8 +79,7 @@ time for det in i3 s3; do
 
     true && python3 \
 	./plot_fit_results.py \
-	/data/legs/rpete/data/e0102/obs_info/$DET.txt \
+	"$datadir"/obs_info/$DET.txt \
 	"$shiftfits_txt" \
         -p "$resdir/params_${DET}.pdf"
-
 done

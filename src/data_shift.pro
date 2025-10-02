@@ -4,7 +4,7 @@
 
 args=command_line_args()
 
-datadir='/data/legs/rpete/data/e0102'
+spawn, './datadir', datadir
 fitdir=datadir+'/fits/'+getenv('CONTAMID')
 resdir=fitdir+'/results'
 

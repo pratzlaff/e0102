@@ -14,8 +14,8 @@ my $version = '0.1';
 
 use Getopt::Long;
 my %default_opts = (
-		    datadir => '/data/legs/rpete/data/e0102',
-		    srcdir => '/data/legs/rpete/flight/e0102/src',
+		    datadir => qx!$FindBin::Bin/datadir!,
+		    srcdir => $FindBin::Bin,
 		    );
 my %opts = %default_opts;
 GetOptions(\%opts,
