@@ -40,17 +40,15 @@ for obsid in $obsids; do
     ps_file="$fitdir/${obsid}_gainfit.ps"
     rm -f "$save_file"
 
-    cd $fitdir
+    #cd $fitdir
 
     cat - <<EOP >$fit_file
 log $log_file
 query yes
 statistic cstat
 data $pi
-back none
-back $bkg_pi
-ignore **-$emin
-ignore $emax-**
+ignore **:**-$emin
+ignore **:$emax-**
 @$model
 statistic cstat
 thaw 1

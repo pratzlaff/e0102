@@ -42,16 +42,15 @@ for obsid in $obsids; do
     ps_file="$fitdir/${obsid}_linefit.ps"
     rm -f "$save_file"
 
-    cd $fitdir
+    #cd $fitdir
 
     cat - <<EOP >$fit_file
 log $log_file
 query yes
 statistic cstat
 data $pi
-back $bkg_pi
-ignore **-$emin
-ignore $emax-**
+ignore **:**-$emin
+ignore **:$emax-**
 @$model
 @$shift_script
 statistic cstat

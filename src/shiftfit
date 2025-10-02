@@ -55,10 +55,8 @@ fit_obsid() {
 log $log_file
 query yes
 data $pi
-back none
-back $bkg_pi
-ignore **-$emin
-ignore $emax-**
+ignore **:**-$emin
+ignore **:$emax-**
 @$model
 statistic cstat
 thaw 1
