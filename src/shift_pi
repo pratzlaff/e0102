@@ -90,8 +90,10 @@ for obsid in $obsids; do
     
 done
 
-# now look for spectra to combine
-for obsid in $obsids; do
-    obsid=$(printf %05d $((10#"$obsid")))
-    combine_spectra $(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/[is]3)
-done
+false && {
+    # now look for spectra to combine
+    for obsid in $obsids; do
+	obsid=$(printf %05d $((10#"$obsid")))
+	combine_spectra $(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/[is]3)
+    done
+} || :

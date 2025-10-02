@@ -37,16 +37,29 @@ model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
     conf37='error max 4.0 1. 37'
 }
 
-fit_obsid() {
-    obsid=$(printf %05d $((10#"$1")))
-    fitdir="$datadir/fits/$CONTAMID/$obsid"
+combined_pi_files() {
+    local obsid="$1"
+    local match=$(\grep --no-filename ^"$obsid" "$SCRIPTDIR"/../data/combine/[is]3)
+    if [ -n "$match" ]; then
+	cut -d= -f2 <<<$match | perl -F, -anle 'print for @F'  |
+	    while read obs; do
+		echo -n "$datadir/fits/$CONTAMID/$obs/${obs}_energy_shift.pi "
+	    done
+	echo
+    fi
+}
 
-    pi="$fitdir/${obsid}_energy_shift.pi"
-    bkg_pi="$fitdir/${obsid}_bkg_energy_shift.pi"
-    log_file="$fitdir/${obsid}_shiftfit.log"
-    save_file="$fitdir/${obsid}_shiftfit.save"
-    fit_file="$fitdir/${obsid}_shiftfit.xcm"
-    ps_file="$fitdir/${obsid}_shiftfit.ps"
+fit_obsid() {
+    local obsid=$(printf %05d $((10#"$1")))
+    local fitdir="$datadir/fits/$CONTAMID/$obsid"
+
+    local pi=$(combined_pi_files $obsid)
+    [ -z "$pi" ] && pi="$fitdir/${obsid}_energy_shift.pi"
+
+    local log_file="$fitdir/${obsid}_shiftfit.log"
+    local save_file="$fitdir/${obsid}_shiftfit.save"
+    local fit_file="$fitdir/${obsid}_shiftfit.xcm"
+    local ps_file="$fitdir/${obsid}_shiftfit.ps"
     rm -f "$save_file"
 
     #cd $fitdir

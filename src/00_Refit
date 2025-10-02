@@ -1,0 +1,70 @@
+#! /bin/bash
+
+set -eo pipefail
+
+. ./functions.sh
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+
+nproc=16
+
+for resp120c in '' yes; do
+    for fitmg in '' yes; do
+	export CONTAMID=$(./ciaostr)
+	export RESP120C=$resp120c
+	export FITMG=$fitmg
+
+	[ "$RESP120C" = yes ] && CONTAMID+='-120c'
+	[ "$FITMG" = yes ] && CONTAMID+='_fitMg'
+
+	datadir=$(./datadir)
+
+	for det in i3 s3; do
+	    export DET=$det
+	    obsids=$(obsids $det)
+
+	    [ "$RESP120C" = yes -a "$DET" = s3 ] && continue
+
+	    resdir="$datadir/fits/$CONTAMID/results"
+	    mkdir -p "$resdir"
+
+	    ./obs_info | tee $datadir/obs_info/$det.txt
+
+	    false && parallel -j $nproc ./specextract ::: $obsids
+
+	    parallel -j $nproc ./gainfit ::: $obsids
+	    gainfits_txt="$resdir/gainfits_${DET}.txt"
+	    perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
+	    ./plot_gainfits "$gainfits_txt"
+	    psmerge_xspec gain
+
+	    echo '.run shift_lines.pro'  | gdl -args $obsids
+
+	    parallel -j $nproc ./linefit ::: $obsids
+	    linefits_txt="$resdir/linefits_${DET}.txt"
+	    perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
+	    ./plot_linefits "$linefits_txt"
+	    psmerge_xspec line
+
+	    echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
+	    psmerge_gain_corrections
+
+	    parallel -j $nproc ./shift_pi ::: $obsids
+
+	    parallel -j $nproc ./shiftfit ::: $obsids
+	    shiftfits_txt="$resdir/shiftfits_${DET}.txt"
+	    perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
+	    ./plot_shiftfits "$shiftfits_txt"
+	    psmerge_xspec shift
+
+	    python3 \
+		./plot_fit_results.py \
+		"$datadir"/obs_info/$DET.txt \
+		"$shiftfits_txt" \
+		-p "$resdir/params_${DET}.pdf"
+	done
+    done
+done
