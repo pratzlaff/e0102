@@ -8,7 +8,7 @@ import os
 import re
 import sys
 
-srcdir=f'/data/legs/rpete/flight/e0102/src'
+srcdir=os.path.realpath(__file__)
 
 iachec = {
     'cons':{'val':1, 'lo':0.9, 'hi':1.1},
