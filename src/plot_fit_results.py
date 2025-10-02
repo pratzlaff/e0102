@@ -8,7 +8,7 @@ import os
 import re
 import sys
 
-srcdir=os.path.realpath(__file__)
+srcdir=os.path.dirname(__file__)
 
 iachec = {
     'cons':{'val':1, 'lo':0.9, 'hi':1.1},
