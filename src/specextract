@@ -66,5 +66,56 @@ for obsid in $obsids; do
 	clobber=yes \
 	combine=no \
 	bkgresp=yes
+
+    srcpi="$fitdir/${obsid}.pi"
+    srcarf="${srcpi/.pi/.arf}"
+    srcrmf="${srcpi/.pi/.rmf}"
+
+    bkgpi="${srcpi/.pi/_bkg.pi}"
+    bkgarf="${bkgpi/.pi/.arf}"
+    bkgrmf="${bkgpi/.pi/.rmf}"
+
+    # set full pathnames ancr,resp,back
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=backfile \
+	value="'$bkgpi'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="'$srcrmf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$srcpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="'$srcarf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=respfile \
+	value="'$bkgrmf'"
+
+    punlearn dmhedit
+    dmhedit \
+	infile="$bkgpi" \
+	filelist=none \
+	operation=add \
+	key=ancrfile \
+	value="'$bkgarf'"
+
 done
     
