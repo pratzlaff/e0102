@@ -56,6 +56,7 @@ ignore **:$emax-**
 @$model
 statistic cstat
 thaw 1
+$thaw37
 fit
 fit
 fit

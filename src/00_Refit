@@ -28,12 +28,14 @@ for resp120c in '' yes; do
 
 	    [ "$RESP120C" = yes -a "$DET" = s3 ] && continue
 
+	    fitdir="$datadir/fits/$CONTAMID"
+
 	    resdir="$datadir/fits/$CONTAMID/results"
 	    mkdir -p "$resdir"
 
 	    ./obs_info | tee $datadir/obs_info/$det.txt
 
-	    false && parallel -j $nproc ./specextract ::: $obsids
+	    true && parallel -j $nproc ./specextract ::: $obsids
 
 	    parallel -j $nproc ./gainfit ::: $obsids
 	    gainfits_txt="$resdir/gainfits_${DET}.txt"
@@ -43,6 +45,18 @@ for resp120c in '' yes; do
 
 	    echo '.run shift_lines.pro'  | gdl -args $obsids
 
+	    # gdl never returns failure, so test that the output
+	    # line_shifts.xcm files are newer than gainfit.xcm
+	    for o in $obsids; do
+		obsid=$(printf %05d $((10#$o)))
+		line_shift_xcm="$fitdir/${obsid}/${obsid}_line_shifts.xcm"
+		gainfit_xcm="$fitdir/${obsid}/${obsid}_gainfit.xcm"
+		[ "$line_shift_xcm" -nt "$gainfit_xcm" ] || {
+		    echo "'${gainfit_xcm}' is newer than '${line_shift_xcm}'" 1>&2
+		    exit 1
+		}
+	    done
+
 	    parallel -j $nproc ./linefit ::: $obsids
 	    linefits_txt="$resdir/linefits_${DET}.txt"
 	    perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
@@ -50,6 +64,18 @@ for resp120c in '' yes; do
 	    psmerge_xspec line
 
 	    echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
+
+	    # gdl never returns failure, so test that the output
+	    # evt2_energy_shift files are newer than linefit.xcm
+	    for o in $obsids; do
+		obsid=$(printf %05d $((10#$o)))
+		evt2_energy_shift="$fitdir/${obsid}/${obsid}_evt2_energy_shift.fits"
+		linefit_xcm="$fitdir/${obsid}/${obsid}_linefit.xcm"
+		[ "$evt2_energy_shift" -nt "$linefit_xcm" ] || {
+		    echo "'${linefit_xcm}' is newer than '${evt2_energy_shift}'" 1>&2
+		    exit 1
+		}
+	    done
 	    psmerge_gain_corrections
 
 	    parallel -j $nproc ./shift_pi ::: $obsids
