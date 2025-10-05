@@ -53,7 +53,7 @@ for my $obsid (@obsids) {
   get_results($obsid);
   $type eq 'shift' || next;
 
-  my @match = `grep --no-filename ",$obsid\$" "$opts{srcdir}/../data/combine/"[is]3`;
+  my @match = `grep --no-filename ",$obsid\$" "$opts{srcdir}/../data/simul/"[is]3`;
   @match and $obsid = +(split '=', $match[0])[0], get_results($obsid);
 
 }

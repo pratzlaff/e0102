@@ -37,9 +37,9 @@ model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
     conf37='error max 4.0 1. 37'
 }
 
-combined_pi_files() {
+simul_pi_files() {
     local obsid="$1"
-    local match=$(\grep --no-filename ^"$obsid" "$SCRIPTDIR"/../data/combine/[is]3)
+    local match=$(\grep --no-filename ^"$obsid" "$SCRIPTDIR"/../data/simul/[is]3)
     if [ -n "$match" ]; then
 	cut -d= -f2 <<<$match | perl -F, -anle 'print for @F'  |
 	    while read obs; do
@@ -53,7 +53,10 @@ fit_obsid() {
     local obsid=$(printf %05d $((10#"$1")))
     local fitdir="$datadir/fits/$CONTAMID/$obsid"
 
-    local pi=$(combined_pi_files $obsid)
+    # for simul fit ObsIDs (e.g., 99999), the fit directory might not yet exist
+    mkdir -p "$fitdir"
+
+    local pi=$(simul_pi_files $obsid)
     [ -z "$pi" ] && pi="$fitdir/${obsid}_energy_shift.pi"
 
     local log_file="$fitdir/${obsid}_shiftfit.log"
@@ -102,9 +105,9 @@ EOP
 
 for obsid in $obsids; do
     fit_obsid $obsid
-    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/combine/[is]3 || :)
+    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
     [ -n "$match" ] && {
-	combobs=$(perl -F= -anle 'print $F[0]' <<<$match)
-	fit_obsid $combobs
+	simul_obs=$(perl -F= -anle 'print $F[0]' <<<$match)
+	fit_obsid $simul_obs
     } || :
 done

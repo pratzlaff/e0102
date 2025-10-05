@@ -17,7 +17,7 @@ for resp120c in '' yes; do
 	export RESP120C=$resp120c
 	export FITMG=$fitmg
 
-	[ "$RESP120C" = yes ] && CONTAMID+='-120c'
+	[ "$RESP120C" = yes ] && CONTAMID+='-120C'
 	[ "$FITMG" = yes ] && CONTAMID+='_fitMg'
 
 	datadir=$(./datadir)

@@ -21,7 +21,7 @@ readcol,'../data/line_energies.txt',param,old
 
 for j=0,n_elements(obsids)-1 do begin
 
-    fit_dir=datadir'/fits/'+contamid+'/'+obsids[j]
+    fit_dir=datadir+'/fits/'+contamid+'/'+obsids[j]
 
     new=old*slope[j]+offset[j] 
     get_lun, lun

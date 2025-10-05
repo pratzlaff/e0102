@@ -28,6 +28,10 @@ heainit
 
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
+[ "$FITMG" = 'yes' ] && {
+    thaw37='thaw 37'
+}
+
 for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
     fitdir="$datadir/fits/$CONTAMID/$obsid"

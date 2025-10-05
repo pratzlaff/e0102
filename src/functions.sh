@@ -1,6 +1,8 @@
 srcdir=/data/legs/rpete/flight/e0102/src
 datadir=/data/legs/rpete/data/e0102
 
+[[ "$PATH" =~ ^/gs ]] || PATH=/gs/bin:"$PATH"
+
 obsids()
 {
     [ $# -eq 1 ] || {
@@ -53,7 +55,7 @@ psmerge_xspec()
     }
 
     [ "$type" = shift ] && {
-	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/combine/$DET")
+	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/simul/$DET")
     }
     psfiletmp="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.ps.tmp"
     psfile="${psfiletmp%%.tmp}"
@@ -69,7 +71,7 @@ psmerge_xspec()
 	-sDEVICE=ps2write \
 	-dAutoRotatePages=/None \
 	-c "<< /Orientation 3 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
-    rm "$psfiletmp"
+    rm -f "$psfiletmp"
 
 }
 

@@ -48,8 +48,8 @@ plot_shiftfit() {
     local plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
     local psfile="$fitdir/${obsid}_shiftfit.ps"
 
-    combine=$(\grep ^$obsid "$srcdir/../data/combine/$DET" || :)
-    [ -n "$combine" ] && obsid=$(perl -F= -anle 'print $F[1]' <<<"$combine")
+    simul=$(\grep ^$obsid "$srcdir/../data/simul/$DET" || :)
+    [ -n "$simul" ] && obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
 
     local date=$(obsid_date ${obsid%%,*})
 

@@ -178,7 +178,7 @@ def make_plots(args, date, data, chy, node):
     if args.pdf:
         pdf.close()
 
-def combine(args):
+def simul(args):
     global srcdir
 
     obsid, date, chy, node = read_obsinfo(args.obsinfo)
@@ -190,24 +190,24 @@ def combine(args):
     obsid = [f'{int(o):05d}' for o in obsid]
     obsid2 = [f'{int(o):05d}' for o in obsid2]
 
-    combinedf=f'{srcdir}/../data/combine/{os.environ["DET"]}'
-    with open(combinedf) as cfile:
+    simulf=f'{srcdir}/../data/simul/{os.environ["DET"]}'
+    with open(simulf) as cfile:
         for line in cfile:
 
             # first deal with obs_info data
             match = re.search(r'^(\d{5})=(.*)$', line)
-            combined = match.group(1)
-            to_combine = match.group(2).split(',')
-            for o in to_combine[:-1]:
+            simuled = match.group(1)
+            to_simul = match.group(2).split(',')
+            for o in to_simul[:-1]:
                 index = obsid.index(o)
                 obsid.pop(index)
                 date = np.delete(date, index)
                 chy = np.delete(chy, index)
                 node = np.delete(node, index)
-            obsid[obsid.index(to_combine[-1])] = combined
+            obsid[obsid.index(to_simul[-1])] = simuled
 
             # then shiftfits
-            for o in to_combine:
+            for o in to_simul:
                 index = obsid2.index(o)
                 obsid2.pop(index)
                 for key1 in data:
@@ -217,7 +217,7 @@ def combine(args):
     return date, chy, node, data
 
 def plot_fit_results(args):
-    date, chy, node, data = combine(args)
+    date, chy, node, data = simul(args)
     make_plots(args, date, data, chy, node)
 
 def main():
