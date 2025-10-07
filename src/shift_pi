@@ -88,6 +88,14 @@ for obsid in $obsids; do
 	key=ancrfile \
 	value="'$fitdir/${obsid}.arf'"
     
+    punlearn dmhedit
+    dmhedit \
+	infile="$newpi" \
+	filelist=none \
+	operation=add \
+	key=backfile \
+	value="'$bkgpi'"
+
 done
 
 false && {
