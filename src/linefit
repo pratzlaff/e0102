@@ -30,6 +30,7 @@ model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
 [ "$FITMG" = 'yes' ] && {
     thaw37='thaw 37'
+    conf37='error max 4.0 1. 37'
 }
 
 for obsid in $obsids; do
@@ -77,6 +78,7 @@ cpd /null
 show free
 show fit
 error max 4.0 1. 29
+$conf37
 error max 4.0 1. 59
 error max 4.0 1. 65
 error max 4.0 1. 116
