@@ -1,7 +1,7 @@
 srcdir=/data/legs/rpete/flight/e0102/src
 datadir=/data/legs/rpete/data/e0102
 
-[[ "$PATH" =~ ^/gs ]] || PATH=/gs/bin:"$PATH"
+[[ "$PATH" =~ ^/opt/gs ]] || PATH=/opt/gs/bin:"$PATH"
 
 obsids()
 {

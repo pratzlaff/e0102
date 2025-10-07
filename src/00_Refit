@@ -30,7 +30,7 @@ for resp120c in '' yes; do
 
 	    fitdir="$datadir/fits/$CONTAMID"
 
-	    resdir="$datadir/fits/$CONTAMID/results"
+	    resdir="$fitdir/results"
 	    mkdir -p "$resdir"
 
 	    ./obs_info | tee $datadir/obs_info/$det.txt
