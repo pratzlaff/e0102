@@ -128,8 +128,10 @@ To test a new contamination file in `specextract`, set environment
 variable `CONTAMFILE`. Generally this will be used in conjunction
 with a correspondingly descriptive `CONTAMID` environment variable.
 
-To use only -120C `p2_resp` files, set environmental variable
-`RESP120C=yes` for the `specextract` run.
+To use only -120C `p2_resp` files, pass command-line argument `--120C`
+to `specextract`. This requires that `src/evt2-120C` has been
+run for each ObsID.
 
-To fit the Mg complex normalization in `shiftfits`, set environment
-variable `FITMG=yes`.
+To fit the Mg complex normalization in `gainfit`, `linefit` and
+`shiftfit`, pass command-line argument `--fitMg`.
+

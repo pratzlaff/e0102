@@ -12,13 +12,19 @@ ciao
 nproc=16
 
 for resp120c in '' yes; do
-    for fitmg in '' yes; do
+    for fitMg in '' yes; do
 	export CONTAMID=$(./ciaostr)
-	export RESP120C=$resp120c
-	export FITMG=$fitmg
+	fitMgopt=
+	resp120Copt=
 
-	[ "$RESP120C" = yes ] && CONTAMID+='-120C'
-	[ "$FITMG" = yes ] && CONTAMID+='_fitMg'
+	[ "$resp120c" = yes ] && {
+	    CONTAMID+='-120C'
+	    resp120Copt='--120C'
+	}
+	[ "$fitMg" = yes ] && {
+	    CONTAMID+='_fitMg'
+	    fitMgopt=--fitMg
+	}
 
 	datadir=$(./datadir)
 
@@ -26,7 +32,7 @@ for resp120c in '' yes; do
 	    export DET=$det
 	    obsids=$(obsids $det)
 
-	    [ "$RESP120C" = yes -a "$DET" = s3 ] && continue
+	    [ "$resp120c" = yes -a "$DET" = s3 ] && continue
 
 	    fitdir="$datadir/fits/$CONTAMID"
 
@@ -35,9 +41,9 @@ for resp120c in '' yes; do
 
 	    ./obs_info | tee $datadir/obs_info/$det.txt
 
-	    true && parallel -j $nproc ./specextract ::: $obsids
+	    true && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
 
-	    parallel -j $nproc ./gainfit ::: $obsids
+	    parallel -j $nproc ./gainfit $fitMgopt ::: $obsids
 	    gainfits_txt="$resdir/gainfits_${DET}.txt"
 	    perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
 	    ./plot_gainfits "$gainfits_txt"
@@ -57,7 +63,7 @@ for resp120c in '' yes; do
 		}
 	    done
 
-	    parallel -j $nproc ./linefit ::: $obsids
+	    parallel -j $nproc ./linefit $fitMgopt ::: $obsids
 	    linefits_txt="$resdir/linefits_${DET}.txt"
 	    perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
 	    ./plot_linefits "$linefits_txt"
@@ -80,7 +86,7 @@ for resp120c in '' yes; do
 
 	    parallel -j $nproc ./shift_pi ::: $obsids
 
-	    parallel -j $nproc ./shiftfit ::: $obsids
+	    parallel -j $nproc ./shiftfit $fitMgopt ::: $obsids
 	    shiftfits_txt="$resdir/shiftfits_${DET}.txt"
 	    perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
 	    ./plot_shiftfits "$shiftfits_txt"

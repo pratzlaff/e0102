@@ -12,6 +12,34 @@
 
 set -eo pipefail
 
+TEMP=$(getopt -o 'h' --long 'fitMg,help' -- "$@") || {
+	echo 'Terminating...' >&2
+	exit 1
+}
+eval set -- "$TEMP"
+unset TEMP
+
+fitMg=
+
+while true; do
+    case "$1" in
+	'-h' | '--help')
+	    echo "Usage: $0 [-h|--help] [--fitMg] [obsid1 obsid2 ...]" >&2
+	    exit
+	    ;;
+	'--fitMg')
+	    fitMg=yes; shift; continue
+	    ;;
+	'--')
+	    shift; break
+	    ;;
+	*)
+	    echo 'Internal error, terminating' >&2
+	    exit 1
+	    ;;
+    esac
+done
+
 [ -z "$CONTAMID" ] && {
     echo "CONTAMID is not set, exiting" 1>&2
     exit 1
@@ -32,7 +60,7 @@ heainit
 
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
-[ "$FITMG" = 'yes' ] && {
+[ "$fitMg" = 'yes' ] && {
     thaw37='thaw 37'
     conf37='error max 4.0 1. 37'
 }
