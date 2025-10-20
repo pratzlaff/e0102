@@ -115,11 +115,10 @@ for det in i3 s3; do
   src/plot_shiftfits "$shiftfits_txt"
   psmerge_xspec shift
 
-  # plot fitted parameters vs time
+  # plot fitted parameters vs time, locates obsinfo and shiftfits
+  # results files based on $CONTAMID and $DET
   python3 \
     src/plot_fit_results.py \
-    /data/legs/rpete/data/e0102/obs_info/$DET.txt \
-    "$shiftfits_txt" \
     -p "$resdir/params_${DET}.pdf"
 done
 ```

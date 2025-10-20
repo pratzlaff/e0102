@@ -94,8 +94,6 @@ for resp120c in '' yes; do
 
 	    python3 \
 		./plot_fit_results.py \
-		"$datadir"/obs_info/$DET.txt \
-		"$shiftfits_txt" \
 		-p "$resdir/params_${DET}.pdf"
 	done
     done

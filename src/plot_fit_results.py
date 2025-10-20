@@ -4,11 +4,15 @@ import argparse
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
+from numpy.random import rand
 import os
 import re
 import sys
 
 srcdir=os.path.dirname(__file__)
+datadir=os.popen(srcdir+'/datadir').read()
+shiftfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/shiftfits_{os.environ["DET"].lower()}.txt'
+obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
 
 iachec = {
     'cons':{'val':1, 'lo':0.9, 'hi':1.1},
@@ -120,6 +124,7 @@ def make_plots(args, date, data, chy, node):
             for j in range(3):
                 jj = (chy[ii]>=341*j+1) & (chy[ii]<341*(j+1)+1)
                 x_ = x[ii][jj]
+                x_ = x_ + 0.3*(rand(x_.size)-0.5)
                 y_ = y[ii][jj]
                 ylo_ = ylo[ii][jj]
                 yhi_ = yhi[ii][jj]
@@ -178,14 +183,35 @@ def make_plots(args, date, data, chy, node):
     if args.pdf:
         pdf.close()
 
-def simul(args):
-    global srcdir
+def no_simul(args):
+    global srcdir, obsinfo, shiftfits
 
-    obsid, date, chy, node = read_obsinfo(args.obsinfo)
-    obsid2, data = read_shiftfits(args.shiftfits)
+    obsid, date, chy, node = read_obsinfo(obsinfo)
+    obsid2, data = read_shiftfits(shiftfits)
     ii = obsid2<80000
     if np.sum(obsid!=obsid2[ii]):
-        raise RuntimeError(f"obsids don't match in '{args.obsinfo}' and '{args.shiftfits}'")
+        raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
+
+    to_delete = []
+    for i, o in enumerate(obsid2):
+        if o >= 80000:
+            to_delete.append(i)
+    to_delete.reverse()
+
+    for i in to_delete:
+        for key1 in data:
+            for key2 in data[key1]:
+                data[key1][key2] = np.delete(data[key1][key2], i)
+    return date, chy, node, data
+
+def simul(args):
+    global srcdir, obsinfo, shiftfits
+
+    obsid, date, chy, node = read_obsinfo(obsinfo)
+    obsid2, data = read_shiftfits(shiftfits)
+    ii = obsid2<80000
+    if np.sum(obsid!=obsid2[ii]):
+        raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
 
     obsid = [f'{int(o):05d}' for o in obsid]
     obsid2 = [f'{int(o):05d}' for o in obsid2]
@@ -217,7 +243,7 @@ def simul(args):
     return date, chy, node, data
 
 def plot_fit_results(args):
-    date, chy, node, data = simul(args)
+    date, chy, node, data = simul(args) if args.simul else no_simul(args)
     make_plots(args, date, data, chy, node)
 
 def main():
@@ -225,8 +251,7 @@ def main():
         description='Plot fit results'
     )
     parser.add_argument('-p', '--pdf', help='Output PDF file.')
-    parser.add_argument('obsinfo', help='Tabulated observation info file.')
-    parser.add_argument('shiftfits', help='Tabulated fit results file.')
+    parser.add_argument('--simul', default=True, action=argparse.BooleanOptionalAction, help='Plot simul fit results, rather than for individual ObsIDs.')
     args = parser.parse_args()
 
     plot_fit_results(args)
