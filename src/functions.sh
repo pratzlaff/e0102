@@ -57,22 +57,12 @@ psmerge_xspec()
     [ "$type" = shift ] && {
 	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/simul/$DET")
     }
-    psfiletmp="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.ps.tmp"
-    psfile="${psfiletmp%%.tmp}"
+
+    pdffile="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.pdf"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}fit.ps"
-    done | xargs psmerge -o "$psfiletmp"
-
-    gs \
-	-dBATCH \
-	-dNOPAUSE \
-	-sOutputFile="$psfile" \
-	-sDEVICE=ps2write \
-	-dAutoRotatePages=/None \
-	-c "<< /Orientation 3 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
-    rm -f "$psfiletmp"
-
+    done | xargs psmerge -o - | ps2pdf - "$pdffile"
 }
 
 psmerge_gain_corrections()
@@ -93,21 +83,11 @@ psmerge_gain_corrections()
 	obsids=$(obsids $DET)
     }
 
-    psfiletmp="$datadir/fits/$CONTAMID/results/gain_corrections_${DET}.ps.tmp"
-    psfile="${psfiletmp%%.tmp}"
+    pdffile="$datadir/fits/$CONTAMID/results/gain_corrections_${DET}.pdf"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_gain_corrections.ps"
-    done | xargs psmerge -o "$psfiletmp"
-
-    gs \
-	-dBATCH \
-	-dNOPAUSE \
-	-sOutputFile="$psfile" \
-	-sDEVICE=ps2write \
-	-dAutoRotatePages=/None \
-	-c "<< /Orientation 1 >> setpagedevice" 0 rotate 0 0 translate -f "$psfiletmp"
-    rm "$psfiletmp"
+    done | xargs psmerge -o - | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
 }
 
 # see /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/combine_spectra.com
