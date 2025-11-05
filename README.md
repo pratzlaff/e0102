@@ -99,11 +99,12 @@ for det in i3 s3; do
   src/plot_linefits "$linefits_txt"
   psmerge_xspec line
 
+  python3 ./plot_gain_corrections.py
+
   # shift energies
   cd src
   echo '.run data_shift.pro'  | gdl -args "$datadir/obs_info/$DET.txt"
   cd -
-  psmerge_gain_corrections
 
   # create spectra with shifted energies
   parallel -j $nproc src/shift_pi ::: $obsids
