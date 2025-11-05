@@ -69,6 +69,8 @@ for resp120c in '' yes; do
 	    ./plot_linefits "$linefits_txt"
 	    psmerge_xspec line
 
+	    python3 ./plot_gain_corrections.py
+
 	    echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
 
 	    # gdl never returns failure, so test that the output
