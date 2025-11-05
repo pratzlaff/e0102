@@ -17,9 +17,12 @@ readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof
 ; line energies in IACHEC E0102 model
 readcol,'../data/line_energies.txt',param,old
 
-; printf to stdout
-
 for j=0,n_elements(obsids)-1 do begin
+
+   if (obs[j] ne obsids[j]) then begin
+      printf, -2, string(obs[j], format='(i)') + ' != '+string(obsids[j], format='(i)')
+      exit, status=1
+   endif
 
     fit_dir=datadir+'/fits/'+contamid+'/'+obsids[j]
 
