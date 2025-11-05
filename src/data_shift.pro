@@ -24,17 +24,17 @@ readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof
 fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
 readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
-;; ;; set up things for plot
-;; ;peasecolr,white=white
-;; ;drakopy,'vinay'
-;; !p.thick=5
-;; !x.thick=5
-;; !y.thick=5
-;; !p.charsize=1.5
-;; !x.charsize=1
-;; !y.charsize=1
-;; !p.charthick=5
-;; set_plot,'ps'
+;; set up things for plot
+;peasecolr,white=white
+;drakopy,'vinay'
+!p.thick=5
+!x.thick=5
+!y.thick=5
+!p.charsize=1.5
+!x.charsize=1
+!y.charsize=1
+!p.charthick=5
+set_plot,'ps'
 
 for i=0,n_elements(obsids)-1 do begin
 
