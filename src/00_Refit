@@ -84,7 +84,6 @@ for resp120c in '' yes; do
 		    exit 1
 		}
 	    done
-	    psmerge_gain_corrections
 
 	    parallel -j $nproc ./shift_pi ::: $obsids
 
