@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
+from scipy import interpolate
 
 srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
@@ -35,10 +36,14 @@ def plot_gain_corrections(args):
         raise RuntimeError(f"obsids don't match in '{linefits}' and '{gainfits}'")
 
     lines = [ 'O7', 'O8', 'Ne9', 'Ne10' ]
+    spline_en = np.array([0.001] + [ en[l] for l in lines ] + [1.1, 1.5])*1000
     en = np.array([ en[l] for l in lines ])
 
     pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{os.environ["DET"].lower()}.pdf'
-    pdf = PdfPages(pdffile)
+    pdf_gc = PdfPages(pdffile)
+
+    pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{os.environ["DET"].lower()}.pdf'
+    pdf_st = PdfPages(pdffile)
 
     obsids = obsids1.astype(int)
 
@@ -65,11 +70,29 @@ def plot_gain_corrections(args):
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_gain_corrections.pdf'
         plt.savefig(pdffile)
 
-        pdf.savefig(fig)
-        
+        pdf_gc.savefig(fig)
+
         plt.close()
 
-    pdf.close()
+        spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.1, 1.5])*1000
+        x = np.arange(1500.)
+        tck = interpolate.splrep(spline_new, spline_en)
+        shift = interpolate.splev(x, tck)
+
+        fig, ax = plt.subplots()
+        ax.plot(x, shift, 'k-')
+        ax.set_title(f'ObsID {obsid:05d}')
+        plt.tight_layout()
+        
+        pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_spline_test.pdf'
+        plt.savefig(pdffile)
+
+        pdf_st.savefig(fig)
+
+        plt.close()
+
+    pdf_gc.close()
+    pdf_st.close()
 
 def main():
     parser = argparse.ArgumentParser(
