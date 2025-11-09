@@ -54,14 +54,15 @@ psmerge_xspec()
 	obsids=$(obsids $DET)
     }
 
-    [ "$type" = shift ] && {
-	obsids+=" "$(perl -F= -anle 'print $F[0]' < "$srcdir/../data/simul/$DET")
-    }
-
     pdffile="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.pdf"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
+
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}fit.ps"
+	[ "$type" = shift ] && {
+	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$DET"  | perl -F= -anle 'print $F[0]')
+	    [ -n "$obsid_simul" ] && echo "$datadir/fits/$CONTAMID/${obsid_simul}/${obsid_simul}_${type}fit.ps"
+	}
     done | xargs psmerge -o - | ps2pdf - "$pdffile"
 }
 
