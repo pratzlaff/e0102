@@ -32,6 +32,19 @@ shopt -s expand_aliases
 
 heainit
 
+obsid_chipy() {
+    local obsid="$1"
+    chipy=$(\grep "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[3])')
+    [ -z "$chipy" ] && {
+	echo "Could not find ObsID $obsid in '$datadir'/obs_info/[is]3.txt" >&2
+	return 1
+    }
+    str=High
+    [ $chipy -lt 682 ] && str=Mid
+    [ $chipy -lt 341 ] && str=Low
+    echo $str
+}
+
 plot_shiftfit() {
     [ $# -eq 5 ] || {
 	echo "Usage: $0 obsid cstat dof redchi chi" 1>&2
@@ -48,8 +61,20 @@ plot_shiftfit() {
     local plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
     local psfile="$fitdir/${obsid}_shiftfit.ps"
 
+    local obsid_chipy=$obsid
+
     simul=$(\grep ^$obsid "$srcdir/../data/simul/$DET" || :)
-    [ -n "$simul" ] && obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
+    [ -n "$simul" ] && {
+	obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
+	obsid_chipy=$(echo $obsid | cut -d, -f1)
+    }
+
+    local chipy=$(obsid_chipy $obsid_chipy)
+    declare -A chipy_ci=(
+	[Low]=4
+	[Mid]=2
+	[High]=3
+    )
 
     local date=$(obsid_date ${obsid%%,*})
 
@@ -63,6 +88,7 @@ iplot data resid
 rescale x $emin $emax
 label otop $CONTAMID, Gain correction applied to the data
 label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-stat=$redchi
+label 1 vpos 0.25 0.8 color ${chipy_ci[$chipy]} csize 2 "$chipy ChipY"
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"
