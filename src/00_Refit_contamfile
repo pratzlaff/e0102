@@ -15,13 +15,11 @@ contam=N9816
 
 export CONTAMFILE=/data/legs/rpete/flight/e0102/data/contam/acisD1999-08-13contam${contam}.fits
 
-fitMg=yes
 for det in i3 s3; do
     export CONTAMID=$(./ciaostr)
     export DET=$det
 
     resp120c=
-    fitMgopt=
     resp120Copt=
 
     [ $det = i3 ] && resp120c=yes
@@ -31,12 +29,7 @@ for det in i3 s3; do
 	resp120Copt='--120C'
     }
 
-    [ "$fitMg" = yes ] && {
-	CONTAMID+='_fitMg'
-	fitMgopt=--fitMg
-    }
-
-    CONTAMID+="_contam_${contam}"
+    CONTAMID+="_fitMg_contam_${contam}"
 
     datadir=$(./datadir)
 
@@ -51,9 +44,9 @@ for det in i3 s3; do
 
     ./obs_info | tee $datadir/obs_info/$det.txt
 
-    false && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
+    true && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
 
-    parallel -j $nproc ./gainfit $fitMgopt ::: $obsids
+    parallel -j $nproc ./gainfit ::: $obsids
     gainfits_txt="$resdir/gainfits_${DET}.txt"
     perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
@@ -73,7 +66,7 @@ for det in i3 s3; do
 	}
     done
 
-    parallel -j $nproc ./linefit $fitMgopt ::: $obsids
+    parallel -j $nproc ./linefit ::: $obsids
     linefits_txt="$resdir/linefits_${DET}.txt"
     perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
     ./plot_linefits "$linefits_txt"
@@ -97,7 +90,7 @@ for det in i3 s3; do
 
     parallel -j $nproc ./shift_pi ::: $obsids
 
-    parallel -j $nproc ./shiftfit $fitMgopt ::: $obsids
+    parallel -j $nproc ./shiftfit ::: $obsids
     shiftfits_txt="$resdir/shiftfits_${DET}.txt"
     perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"

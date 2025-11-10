@@ -8,23 +8,21 @@
 
 set -eo pipefail
 
-TEMP=$(getopt -o 'h' --long 'fitMg,help' -- "$@") || {
+TEMP=$(getopt -o 'h' --long 'example,help' -- "$@") || {
 	echo 'Terminating...' >&2
 	exit 1
 }
 eval set -- "$TEMP"
 unset TEMP
 
-fitMg=
-
 while true; do
     case "$1" in
 	'-h' | '--help')
-	    echo "Usage: $0 [-h|--help] [--fitMg] [obsid1 obsid2 ...]" >&2
+	    echo "Usage: $0 [-h|--help] [--example] [obsid1 obsid2 ...]" >&2
 	    exit
 	    ;;
-	'--fitMg')
-	    fitMg=yes; shift; continue
+	'--example')
+	    example=yes; shift; continue
 	    ;;
 	'--')
 	    shift; break
@@ -55,11 +53,6 @@ shopt -s expand_aliases
 heainit
 
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
-
-[ "$fitMg" = 'yes' ] && {
-    thawMg='thaw 37'
-    confMg='error max 4.0 1. 37'
-}
 
 for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
@@ -93,7 +86,7 @@ ignore **:$emax-**
 @$shift_script
 statistic cstat
 thaw 1
-$thawMg
+thaw 37
 ${o7_freeze}
 ${o8_freeze}
 fit
@@ -113,7 +106,6 @@ cpd /null
 show free
 show fit
 error max 4.0 1. 29
-$confMg
 error max 4.0 1. 59
 error max 4.0 1. 65
 error max 4.0 1. 116
