@@ -32,19 +32,6 @@ shopt -s expand_aliases
 
 heainit
 
-obsid_chipy() {
-    local obsid="$1"
-    chipy=$(\grep "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[3])')
-    [ -z "$chipy" ] && {
-	echo "Could not find ObsID $obsid in '$datadir'/obs_info/[is]3.txt" >&2
-	return 1
-    }
-    str=High
-    [ $chipy -lt 682 ] && str=Mid
-    [ $chipy -lt 341 ] && str=Low
-    echo $str
-}
-
 plot_shiftfit() {
     [ $# -eq 5 ] || {
 	echo "Usage: $0 obsid cstat dof redchi chi" 1>&2

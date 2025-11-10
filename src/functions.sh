@@ -18,8 +18,26 @@ obsid_date()
     local obsids="$@"
     for o in $obsids; do
 	o=$(printf %05d $((10#"$o")))
-	\grep --no-filename ^$o "$datadir/obs_info/"[is]3.txt  | cut -f2
+	\grep -h ^$o "$datadir/obs_info/"[is]3.txt  | cut -f2
     done
+}
+
+obsid_chipy() {
+    local obsid="$1"
+    chipy=$(\grep -h "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[3])')
+    [ -z "$chipy" ] && {
+	echo "Could not find ObsID $obsid in '$datadir'/obs_info/[is]3.txt" >&2
+	return 1
+    }
+    str=High
+    [ $chipy -lt 682 ] && str=Mid
+    [ $chipy -lt 341 ] && str=Low
+    echo $str
+}
+
+obsid_year() {
+    local obsid="$1"
+    \grep -h "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[1])'
 }
 
 psmerge_xspec()
