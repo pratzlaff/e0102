@@ -61,8 +61,8 @@ heainit
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
 [ "$fitMg" = 'yes' ] && {
-    thaw37='thaw 37'
-    conf37='error max 4.0 1. 37'
+    thawMg='thaw 37'
+    errorMg='error max 4.0 1. 37'
 }
 
 simul_pi_files() {
@@ -121,7 +121,7 @@ statistic cstat
 thaw 1
 ${o7_freeze}
 ${o8_freeze}
-$thaw37
+$thawMg
 fit
 fit
 fit
@@ -134,7 +134,7 @@ cpd /null
 show free
 show fit
 error max 4.0 1. 1
-$conf37
+$errorMg
 error max 4.0 1. 61
 error max 4.0 1. 67
 ${o7_error}

@@ -57,8 +57,8 @@ heainit
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm"
 
 [ "$fitMg" = 'yes' ] && {
-    thaw37='thaw 37'
-    conf37='error max 4.0 1. 37'
+    thawMg='thaw 37'
+    confMg='error max 4.0 1. 37'
 }
 
 for obsid in $obsids; do
@@ -93,7 +93,7 @@ ignore **:$emax-**
 @$shift_script
 statistic cstat
 thaw 1
-$thaw37
+$thawMg
 ${o7_freeze}
 ${o8_freeze}
 fit
@@ -113,7 +113,7 @@ cpd /null
 show free
 show fit
 error max 4.0 1. 29
-$conf37
+$confMg
 error max 4.0 1. 59
 error max 4.0 1. 65
 error max 4.0 1. 116
