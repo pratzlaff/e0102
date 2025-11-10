@@ -215,9 +215,13 @@ sub print_fit_gainfit {
   my @p = ($obs, $val->{Cons});
 
   for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
-    if (exists $val->{$p}) {
+    if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
       push @fmt, qw/ %8.3e %6.1e /;
+    }
+    else {
+      push(@p, 'nan', 'nan');
+      push @fmt, qw/ %s %s /;
     }
   }
 
@@ -243,9 +247,13 @@ sub print_fit_linefit {
   my @p = ($obs, $val->{Cons});
 
   for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
-    if (exists $val->{$p}) {
+    if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
       push @fmt, qw/ %8.3e %6.1e /;
+    }
+    else {
+      push(@p, 'nan', 'nan');
+      push @fmt, qw/ %s %s /;
     }
   }
 
@@ -253,9 +261,13 @@ sub print_fit_linefit {
   push @fmt, qw/ %8.3f %3.0f %5.2f %6.1f /;
 
   for my $p (qw/ Ne10en Ne9en O8en O7en /) {
-    if (exists $val->{$p}) {
+    if (exists $val->{$p} and exists $lo->{$p}) {
       push(@p, map { $_->{$p} } ($val, $lo, $hi));
       push @fmt, qw/ %7.5f %7.5f %7.5f /;
+    }
+    else {
+      push(@p, 'nan', 'nan', 'nan');
+      push @fmt, qw/ %s %s %s /;
     }
   }
 
@@ -270,9 +282,13 @@ sub print_fit_shiftfit {
   my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
 
   for my $p (qw/ Ne10norm Ne9norm O8norm O7norm Mgnorm /) {
-    if (exists $val->{$p}) {
+    if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
       push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;
+    }
+    else {
+      push(@p, 'nan', 'nan', 'nan', 'nan');
+      push @fmt, qw/ %s %s %s %s /;
     }
   }
 

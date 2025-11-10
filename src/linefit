@@ -75,7 +75,12 @@ for obsid in $obsids; do
     ps_file="$fitdir/${obsid}_linefit.ps"
     rm -f "$save_file"
 
-    #cd $fitdir
+    o7_freeze=
+    o8_freeze=
+    year=$(obsid_year $obsid)
+
+    [ $year -gt ${o7_cutoff} ] && o7_freeze='freeze 127'
+    [ $year -gt ${o8_cutoff} ] && o8_freeze='freeze 118'
 
     cat - <<EOP >$fit_file
 log $log_file
@@ -89,6 +94,8 @@ ignore **:$emax-**
 statistic cstat
 thaw 1
 $thaw37
+${o7_freeze}
+${o8_freeze}
 fit
 fit
 fit

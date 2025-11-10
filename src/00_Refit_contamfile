@@ -51,7 +51,7 @@ for det in i3 s3; do
 
     ./obs_info | tee $datadir/obs_info/$det.txt
 
-    true && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
+    false && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
 
     parallel -j $nproc ./gainfit $fitMgopt ::: $obsids
     gainfits_txt="$resdir/gainfits_${DET}.txt"
@@ -105,10 +105,10 @@ for det in i3 s3; do
 
     python3 \
 	./plot_fit_results.py \
-	-p "$resdir/params_${DET}.pdf" --no-simul
+	-p "$resdir/params_${DET}_simul.pdf"
 
     python3 \
 	./plot_fit_results.py \
-	-p "$resdir/params_${DET}_simul.pdf"
+	-p "$resdir/params_${DET}.pdf" --no-simul
 
 done

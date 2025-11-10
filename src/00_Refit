@@ -41,7 +41,7 @@ for resp120c in '' yes; do
 
 	    ./obs_info | tee $datadir/obs_info/$det.txt
 
-	    true && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
+	    false && parallel -j $nproc ./specextract $resp120Copt ::: $obsids
 
 	    parallel -j $nproc ./gainfit $fitMgopt ::: $obsids
 	    gainfits_txt="$resdir/gainfits_${DET}.txt"

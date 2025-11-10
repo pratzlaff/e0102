@@ -1,7 +1,8 @@
 srcdir=/data/legs/rpete/flight/e0102/src
 datadir=/data/legs/rpete/data/e0102
 
-[[ "$PATH" =~ ^/opt/gs ]] || PATH=/opt/gs/bin:"$PATH"
+o7_cutoff=2020
+o8_cutoff=2023
 
 obsids()
 {
@@ -37,7 +38,11 @@ obsid_chipy() {
 
 obsid_year() {
     local obsid="$1"
-    \grep -h "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[1])'
+
+    # if the ObsID is a simul fit, use the first obsid
+    obsid_simul=$(\grep -h "^$obsid=" "$srcdir/../data/simul/$DET"  | perl -F, -anle 'print $F[1]')
+    [ -n "${obsid_simul}" ] && obsid=${obsid_simul}
+    \grep -h "^${obsid}" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[1])'
 }
 
 psmerge_xspec()
@@ -80,7 +85,7 @@ psmerge_xspec()
 	[ "$type" = shift ] && {
 	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$DET"  | perl -F= -anle 'print $F[0]')
 	    [ -n "$obsid_simul" ] && echo "$datadir/fits/$CONTAMID/${obsid_simul}/${obsid_simul}_${type}fit.ps"
-	}
+	} || :
     done | xargs psmerge -o - | ps2pdf - "$pdffile"
 }
 

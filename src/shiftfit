@@ -93,7 +93,22 @@ fit_obsid() {
     local ps_file="$fitdir/${obsid}_shiftfit.ps"
     rm -f "$save_file"
 
-    #cd $fitdir
+    o7_freeze=
+    o7_error='error max 4.0 1. 127'
+
+    o8_freeze=
+    o8_error='error max 4.0 1. 118'
+
+    year=$(obsid_year $obsid)
+
+    [ $year -gt ${o7_cutoff} ] && {
+	o7_freeze='freeze 127'
+	o7_error=
+    }
+    [ $year -gt ${o8_cutoff} ] && {
+	o8_freeze='freeze 118'
+	o8_error=
+    }
 
     cat - <<EOP >$fit_file
 log $log_file
@@ -104,6 +119,8 @@ ignore **:$emax-**
 @$model
 statistic cstat
 thaw 1
+${o7_freeze}
+${o8_freeze}
 $thaw37
 fit
 fit
@@ -120,8 +137,8 @@ error max 4.0 1. 1
 $conf37
 error max 4.0 1. 61
 error max 4.0 1. 67
-error max 4.0 1. 118
-error max 4.0 1. 127
+${o7_error}
+${o8_error}
 show free
 show fit
 statistic chi
