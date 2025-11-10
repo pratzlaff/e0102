@@ -12,7 +12,7 @@ resdir=datadir+'/fits/'+contamid+'/results'
 ; get gainfit slope and offset
 fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
 print,fit_results
-readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
+readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
 ; line energies in IACHEC E0102 model
 readcol,'../data/line_energies.txt',param,old

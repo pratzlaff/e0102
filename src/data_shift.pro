@@ -18,11 +18,11 @@ printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne
 
 ;; get best-fit energies:
 fit_results=resdir+'/linefits_'+getenv('DET')+'.txt'
-readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,ne10_energy,ne10lo,ne10hi,ne9_energy,ne9lo,ne9hi,o8_energy,o8lo,o8hi,o7_energy,o7lo,o7hi,comment='#'
+readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,mg11_energy,mg11lo,mg11hi,ne10_energy,ne10lo,ne10hi,ne9_energy,ne9lo,ne9hi,o8_energy,o8lo,o8hi,o7_energy,o7lo,o7hi,comment='#'
 
 ;; get gainfit slope and offset:
 fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
-readcol,fit_results,obs,cons,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
+readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
 ;; set up things for plot
 ;peasecolr,white=white

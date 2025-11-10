@@ -80,7 +80,7 @@ sub print_header_gainfit {
   print "# fitting between ${emin} - ${emax} keV\n";
   print "# model: ${model}\n";
   print "#\n";
-  print "#ObsID\tCons\tNe10\tNe10err\tNe9\tNe9err\tO8\tO8err\tO7\tO7err\tCstat\tDof\tRedChi\tChi\tSlope\tS_err\tOffset\tO_err\n";
+  print "#ObsID\tCons\tMg11\tMg11err\tNe10\tNe10err\tNe9\tNe9err\tO8\tO8err\tO7\tO7err\tCstat\tDof\tRedChi\tChi\tSlope\tS_err\tOffset\tO_err\n";
 }
 
 sub print_header_linefit {
@@ -88,7 +88,7 @@ sub print_header_linefit {
   print "# fitting between ${emin} - ${emax} keV\n";
   print "# model: ${model} w/ line energies shifted & \"big 4\" energies free\n";
   print "#\n";
-  print "#ObsID\tCons\tNe10\tNe10err\tNe9\tNe9err\tO8\tO8err\tO7\tO7err\tCstat\tDof\tRedChi\tChi\tNe10en\tNe10lo\tNe10hi\tNe9en\tNe9lo\tNe9hi\tO8en\tO8lo\tO8hi\tO7en\tO7lo\tO7hi\n";
+  print "#ObsID\tCons\tMg11\tMg11err\tNe10\tNe10err\tNe9\tNe9err\tO8\tO8err\tO7\tO7err\tCstat\tDof\tRedChi\tChi\tMg11en\tMg11lo\tMg11hi\tNe10en\tNe10lo\tNe10hi\tNe9en\tNe9lo\tNe9hi\tO8en\tO8lo\tO8hi\tO7en\tO7lo\tO7hi\n";
 }
 
 sub print_header_shiftfit {
@@ -98,11 +98,7 @@ sub print_header_shiftfit {
   print "# model: ${model}\n";
   print "# lo and hi give 1-sigma confidence interval\n";
   print "#\n";
-  if (exists $val->{Mgnorm}) {
-    print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tMg\tMgerr\tMglo\tMghi\tCstat\tDof\tRedChi\tChi\n";
-  } else {
-    print "#ObsID\tCons\tConsLo\tConsHi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
-  }
+  print "#ObsID\tCons\tConsLo\tConsHi\tMg11\tMg11err\tMg11lo\tMg11hi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
 }
 
 sub get_results {
@@ -124,6 +120,8 @@ sub get_results {
 		 slope    => [1, 1, 'slope'],
 		 offset   => [2, 1, 'offset'],
 		 Cons     => [1, 1, 'factor'],
+		 Mg11norm => [37, 13, 'norm'],
+		 Mg11en   => [29, 11, 'norm'],
 		 Ne10norm => [61, 21, 'norm'],
 		 Ne10en   => [59, 21, 'LineE'],
 		 Ne9norm  => [67, 23, 'norm'],
@@ -132,7 +130,6 @@ sub get_results {
 		 O8en     => [116, 40, 'LineE'],
 		 O7norm   => [127, 43, 'norm'],
 		 O7en     => [119, 41, 'LineE'],
-		 Mgnorm   => [37, 13, 'norm'],
 		);
   my (%val, %err, %lo, %hi, %stat);
 
@@ -214,7 +211,7 @@ sub print_fit_gainfit {
   my @fmt = qw/ %5s %5.3f /;
   my @p = ($obs, $val->{Cons});
 
-  for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
+  for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
       push @fmt, qw/ %8.3e %6.1e /;
@@ -246,7 +243,7 @@ sub print_fit_linefit {
   my @fmt = qw/ %5s %5.3f /;
   my @p = ($obs, $val->{Cons});
 
-  for my $p (qw/ Ne10norm Ne9norm O8norm O7norm /) {
+  for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
       push @fmt, qw/ %8.3e %6.1e /;
@@ -260,7 +257,7 @@ sub print_fit_linefit {
   push @p, @{$stat}{qw/ cstat dof redchi chi /};
   push @fmt, qw/ %8.3f %3.0f %5.2f %6.1f /;
 
-  for my $p (qw/ Ne10en Ne9en O8en O7en /) {
+  for my $p (qw/ Mg11en Ne10en Ne9en O8en O7en /) {
     if (exists $val->{$p} and exists $lo->{$p}) {
       push(@p, map { $_->{$p} } ($val, $lo, $hi));
       push @fmt, qw/ %7.5f %7.5f %7.5f /;
@@ -272,7 +269,6 @@ sub print_fit_linefit {
   }
 
   printf join("\t", @fmt)."\n", @p;
-
 }
 
 sub print_fit_shiftfit {
@@ -281,7 +277,7 @@ sub print_fit_shiftfit {
   my @fmt = ('%5s', ('%5.3f')x3);
   my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
 
-  for my $p (qw/ Ne10norm Ne9norm O8norm O7norm Mgnorm /) {
+  for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
       push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;

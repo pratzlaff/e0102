@@ -68,6 +68,6 @@ EOP
 
 while IFS= read -r line; do
     [[ "$line" =~ ^# ]] && continue
-    read -r obsid cstat dof redchi chi <<<$(perl -anle 'print join " ", @F[0, 10..13]' <<< "$line")
+    read -r obsid cstat dof redchi chi <<<$(perl -anle 'print join " ", @F[0, 12..15]' <<< "$line")
     plot_gainfit $obsid $cstat $dof $redchi $chi
 done < "$f"

@@ -20,7 +20,7 @@ iachec = {
     'O8':{'val':0.004393},
     'Ne9':{'val':0.001381},
     'Ne10':{'val':0.001378},
-    'Mg':{'val':0.000108671},
+    'Mg11':{'val':0.000108671},
 }
 for key in iachec:
     for limit in 'lo', 'hi':
@@ -42,11 +42,11 @@ def grep_header(expr, shiftfits):
 def read_shiftfits(shiftfits):
     obsid, \
     cons, conslo, conshi, \
+    mg11, mg11lo, mg11hi, \
     ne10, ne10lo, ne10hi, \
     ne9, ne9lo, ne9hi, \
     o8, o8lo, o8hi, \
     o7, o7lo, o7hi, \
-    mg, mglo, mghi, \
     redchi \
     = np.loadtxt(shiftfits, unpack=True, usecols=[0,
                                                   1,2,3,
@@ -62,7 +62,7 @@ def read_shiftfits(shiftfits):
             'O8':{'val':o8, 'lo':o8lo, 'hi':o8hi},
             'Ne9':{'val':ne9, 'lo':ne9lo, 'hi':ne9hi},
             'Ne10':{'val':ne10, 'lo':ne10lo, 'hi':ne10hi},
-            'Mg':{'val':mg, 'lo':mglo, 'hi':mghi},
+            'Mg11':{'val':mg11, 'lo':mg11lo, 'hi':mg11hi},
             'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
             }
 

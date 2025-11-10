@@ -12,10 +12,10 @@ linefits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{os.environ[
 
 def read_linefits():
     global linefits
-    obsids, ne10, ne10lo, ne10hi, ne9, ne9lo, ne9hi, o8, o8lo, o8hi, o7, o7lo, o7hi = np.loadtxt(linefits, usecols=[0,]+list(range(14,14+12)), unpack=True)
-    en = { 'O7':o7, 'O8':o8, 'Ne9':ne9, 'Ne10':ne10 }
-    lo = { 'O7':o7lo, 'O8':o8lo, 'Ne9':ne9lo, 'Ne10':ne10lo }
-    hi = { 'O7':o7hi, 'O8':o8hi, 'Ne9':ne9hi, 'Ne10':ne10hi }
+    obsids, mg11, mg11lo, mg11hi, ne10, ne10lo, ne10hi, ne9, ne9lo, ne9hi, o8, o8lo, o8hi, o7, o7lo, o7hi = np.loadtxt(linefits, usecols=[0,]+list(range(16,16+15)), unpack=True)
+    en = { 'O7':o7, 'O8':o8, 'Ne9':ne9, 'Ne10':ne10, 'Mg11':mg11 }
+    lo = { 'O7':o7lo, 'O8':o8lo, 'Ne9':ne9lo, 'Ne10':ne10lo, 'Mg11':mg11lo }
+    hi = { 'O7':o7hi, 'O8':o8hi, 'Ne9':ne9hi, 'Ne10':ne10hi, 'Mg11':mg11hi }
     return obsids, en, lo, hi
 
 def read_gainfits():
@@ -28,15 +28,16 @@ def plot_gain_corrections(args):
     en = { 'O7':0.573900,
            'O8':0.653600,
            'Ne9':0.922100,
-           'Ne10':1.02170
+           'Ne10':1.02170,
+           'Mg11':1.3522
           }
     obsids1, en_new, lo, hi = read_linefits()
     obsids2, slope, offset = read_gainfits()
     if (np.sum(obsids1 != obsids2)):
         raise RuntimeError(f"obsids don't match in '{linefits}' and '{gainfits}'")
 
-    lines = [ 'O7', 'O8', 'Ne9', 'Ne10' ]
-    spline_en = np.array([0.001] + [ en[l] for l in lines ] + [1.1, 1.5])*1000
+    lines = [ 'O7', 'O8', 'Ne9', 'Ne10', 'Mg11' ]
+    spline_en = np.array([0.001] + [ en[l] for l in lines ] + [1.6, 2.0])*1000
     en = np.array([ en[l] for l in lines ])
 
     pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{os.environ["DET"].lower()}.pdf'
@@ -63,7 +64,7 @@ def plot_gain_corrections(args):
         ax.set_xlabel('Energy (keV)')
         ax.set_ylabel('ΔE (Measured - Theoretical; keV)')
         ax.legend(frameon=False, loc='lower left')
-        ax.set_xlim(0.5, 1.1)
+        ax.set_xlim(0.5, 1.5)
         ax.set_ylim(-.04, .04)
         plt.tight_layout()
 
