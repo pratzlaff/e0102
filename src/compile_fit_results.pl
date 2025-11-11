@@ -121,7 +121,7 @@ sub get_results {
 		 offset   => [2, 1, 'offset'],
 		 Cons     => [1, 1, 'factor'],
 		 Mg11norm => [37, 13, 'norm'],
-		 Mg11en   => [29, 11, 'norm'],
+		 Mg11en   => [29, 11, 'LineE'],
 		 Ne10norm => [61, 21, 'norm'],
 		 Ne10en   => [59, 21, 'LineE'],
 		 Ne9norm  => [67, 23, 'norm'],

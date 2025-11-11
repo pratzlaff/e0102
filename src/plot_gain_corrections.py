@@ -75,7 +75,7 @@ def plot_gain_corrections(args):
 
         plt.close()
 
-        spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.1, 1.5])*1000
+        spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.6, 2.0])*1000
         x = np.arange(1500.)
         tck = interpolate.splrep(spline_new, spline_en)
         shift = interpolate.splev(x, tck)

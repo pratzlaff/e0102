@@ -15,27 +15,16 @@ contam=N9816
 
 export CONTAMFILE=/data/legs/rpete/flight/e0102/data/contam/acisD1999-08-13contam${contam}.fits
 
+export CONTAMID=$(./ciaostr)_shiftMg_${contam}
 for det in i3 s3; do
-    export CONTAMID=$(./ciaostr)
     export DET=$det
 
-    resp120c=
     resp120Copt=
-
-    [ $det = i3 ] && resp120c=yes
-
-    [ "$resp120c" = yes ] && {
-	CONTAMID+='-120C'
-	resp120Copt='--120C'
-    }
-
-    CONTAMID+="_fitMg_contam_${contam}"
+    [ $det = i3 ] && resp120Copt='--120C'
 
     datadir=$(./datadir)
 
     obsids=$(obsids $det)
-
-    [ "$resp120c" = yes -a "$DET" = s3 ] && continue
 
     fitdir="$datadir/fits/$CONTAMID"
 

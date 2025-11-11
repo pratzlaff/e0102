@@ -14,7 +14,7 @@ readcol,obsinfo,obsids,date,chx,chy,node,exp,rdmode,datamode,comment='#',format=
 
 get_lun, lun
 openw,lun,resdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
-printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi'
+printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi  mg11   mg11lo mg11hi'
 
 ;; get best-fit energies:
 fit_results=resdir+'/linefits_'+getenv('DET')+'.txt'
@@ -43,13 +43,13 @@ for i=0,n_elements(obsids)-1 do begin
    outfile=fitdir+'/'+obsid+'/'+obsid+'_evt2_energy_shift.fits'
 
    ;; un-shifted energies (eV)
-   en=[0.573900,0.653600,0.922100,1.02170]*1000.  
+   en=[0.573900,0.653600,0.922100,1.02170,1.3522]*1000.
 
-   new=[o7_energy[i],o8_energy[i],ne9_energy[i],ne10_energy[i]] ; best-fit energies (params 119, 116, 65, 59)
-   lo=[o7lo[i],o8lo[i],ne9lo[i],ne10lo[i]] 
-   hi=[o7hi[i],o8hi[i],ne9hi[i],ne10hi[i]] 
+   new=[o7_energy[i],o8_energy[i],ne9_energy[i],ne10_energy[i],mg11_energy[i]] ; best-fit energies (params 119, 116, 65, 59, 29)
+   lo=[o7lo[i],o8lo[i],ne9lo[i],ne10lo[i],mg11lo[i]]
+   hi=[o7hi[i],o8hi[i],ne9hi[i],ne10hi[i],mg11hi[i]]
 
-   printf,lun,obsid,chx[i],chy[i],node[i],new[0]*1000./en[0],lo[0]*1000./en[0],hi[0]*1000./en[0],new[1]*1000./en[1],lo[1]*1000./en[1],hi[1]*1000./en[1],new[2]*1000./en[2],lo[2]*1000./en[2],hi[2]*1000./en[2],new[3]*1000./en[3],lo[3]*1000./en[3],hi[3]*1000./en[3],format='(A5,2X,F5.1,2X,F5.1,2X,I1,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3)'
+   printf,lun,obsid,chx[i],chy[i],node[i],new[0]*1000./en[0],lo[0]*1000./en[0],hi[0]*1000./en[0],new[1]*1000./en[1],lo[1]*1000./en[1],hi[1]*1000./en[1],new[2]*1000./en[2],lo[2]*1000./en[2],hi[2]*1000./en[2],new[3]*1000./en[3],lo[3]*1000./en[3],hi[3]*1000./en[3],new[4]*1000./en[4],lo[4]*1000./en[4],hi[4]*1000./en[4],format='(A5,2X,F5.1,2X,F5.1,2X,I1,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3,2X,F5.3)'
 
     gf=(en/1000.)*slope[i] + offset[i] ; gain fit shifts
     
@@ -68,11 +68,11 @@ for i=0,n_elements(obsids)-1 do begin
 
 ; the correction
    
-    ; force it to be 0 at 0.001 keV and  1.1 and 1.5 keV 
-    en=[0.001,0.573900,0.653600,0.922100,1.02170,1.1,1.5]*1000. 
-    new=[0.001,o7_energy[i],o8_energy[i],ne9_energy[i],ne10_energy[i],1.1,1.5] ; best-fit energies (params 119, 116, 65, 59) 
+    ; force it to be 0 at 0.001 keV and  1.6 and 2.0 keV
+    en=[0.001,0.573900,0.653600,0.922100,1.02170,1.3522,1.6,2.0]*1000.
+    new=[0.001,o7_energy[i],o8_energy[i],ne9_energy[i],ne10_energy[i],mg11_energy[i],1.6,2.0] ; best-fit energies (params 119, 116, 65, 59, 29)
 
-    x=findgen(1500)
+    x=findgen(1600)
     shift=spline(new*1000.,en,x)
 
     device,filename=fitdir+'/'+obsid+'/'+obsid+'_spline_test.ps',/landscape,/color
@@ -114,8 +114,8 @@ for i=0,n_elements(obsids)-1 do begin
     
     for j=0L,n_elements(evt2.time)-1L do begin
         
-                                ; modify energies between 0.2 - 1.1 keV
-        if (evt2[j].energy ge 200 and evt2[j].energy le 1100) then evt_out[j].energy=interpol(shift,x,evt2[j].energy) else evt_out[j].energy = evt2[j].energy
+                                ; modify energies between 0.2 - 1.6 keV
+        if (evt2[j].energy ge 200 and evt2[j].energy le 1600) then evt_out[j].energy=interpol(shift,x,evt2[j].energy) else evt_out[j].energy = evt2[j].energy
         
                                 ; update PI values:
         evt_out[j].pi=floor(evt_out[j].energy/14.6)+1
