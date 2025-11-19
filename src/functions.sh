@@ -114,6 +114,39 @@ psmerge_gain_corrections()
     done | xargs psmerge -o - | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
 }
 
+psmerge_gdl()
+{
+    [[ "$DET" =~ ^[is]3$ ]] || {
+	echo "DET must be i3|s3" 1>&2
+	return 1
+    }
+
+    [ -z "$CONTAMID" ] && {
+	echo "CONTAMID must be set" 1>&2
+	return 1
+    }
+
+    local type="$1"
+    shift
+
+    [[ $type =~ ^(spline_test|gain_corrections)$ ]] || {
+	echo "Usage: $0 spline_test|gain_corrections" 1>&2
+	return 1
+    }
+
+    [ $# -ge 1 ] && {
+	obsids="$@"
+    } || {
+	obsids=$(obsids $DET)
+    }
+
+    pdffile="$datadir/fits/$CONTAMID/results/${type}_gdl_${DET}.pdf"
+    for obsid in $obsids; do
+	obsid=$(printf %05d $((10#$obsid)))
+	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}.ps"
+    done | xargs psmerge -o - | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
+}
+
 # see /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/combine_spectra.com
 combine_spectra()
 {

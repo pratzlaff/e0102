@@ -77,6 +77,8 @@ for det in i3 s3; do
 	}
     done
 
+    psmerge_gdl spline_test
+
     parallel -j $nproc ./shift_pi ::: $obsids
 
     parallel -j $nproc ./shiftfit ::: $obsids
