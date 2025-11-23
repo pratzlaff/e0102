@@ -24,6 +24,8 @@ readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7
 fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
 readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
+;; FIXME: ensure all of the files have the same obsids
+
 ;; set up things for plot
 ;peasecolr,white=white
 ;drakopy,'vinay'
@@ -71,6 +73,13 @@ for i=0,n_elements(obsids)-1 do begin
     ; force it to be 0 at 0.001 keV and  1.6 and 2.0 keV
     en=[0.001,0.573900,0.653600,0.922100,1.02170,1.3522,1.6,2.0]*1000.
     new=[0.001,o7_energy[i],o8_energy[i],ne9_energy[i],ne10_energy[i],mg11_energy[i],1.6,2.0] ; best-fit energies (params 119, 116, 65, 59, 29)
+
+
+    ; when the line energy wasn't fit, use the gain fit
+    ind=where(~finite(new), /null)
+    for k=0,n_elements(ind)-1 do begin
+       new[ind[k]]=gf[ind[k]-1]
+    endfor
 
     x=findgen(1600)
     shift=spline(new*1000.,en,x)
