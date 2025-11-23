@@ -106,6 +106,9 @@ for det in i3 s3; do
   echo '.run data_shift.pro'  | gdl -args "$datadir/obs_info/$DET.txt"
   cd -
 
+  # merge individual spline_test plots into "$resdir/spline_test_${DET}.pdf"
+  psmerge_gdl spline_test
+
   # create spectra with shifted energies
   parallel -j $nproc src/shift_pi ::: $obsids
 
