@@ -82,6 +82,7 @@ for resp120c in '' yes; do
 	done
 
 	psmerge_gdl spline_test
+	psmerge_gdl gain_corrections
 
 	parallel -j $nproc ./shift_pi ::: $obsids
 

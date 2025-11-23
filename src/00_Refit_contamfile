@@ -78,6 +78,7 @@ for det in i3 s3; do
     done
 
     psmerge_gdl spline_test
+    psmerge_gdl gain_corrections
 
     parallel -j $nproc ./shift_pi ::: $obsids
 

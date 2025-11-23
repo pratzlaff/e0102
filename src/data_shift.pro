@@ -53,18 +53,18 @@ for i=0,n_elements(obsids)-1 do begin
 
     gf=(en/1000.)*slope[i] + offset[i] ; gain fit shifts
     
-;; ; plot the correction
+; plot the correction
 
-;;     device,filename=fitdir+'/'+obsid+'/'+obsid+'_gain_corrections.ps',/landscape,/color
-;; ;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+', contam '+contam,linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
-;; ;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+' with test CALDB',linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
-;;     plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Cor. for ObsID '+obsid,linestyle=0,col=0,psym=-6,yr=[-0.04,0.04],/nodata
-;;     oplot,en/1000.,gf-en/1000.,linestyle=2,col=1,psym=-2
-;;     oplot,en/1000.,new-en/1000.,linestyle=0,col=2,psym=-2
-;;     oplot,en/1000.,lo-en/1000.,linestyle=1,col=2
-;;     oplot,en/1000.,hi-en/1000.,linestyle=1,col=2
-;;     al_legend,['Linear corretion (gainfit)','Best-fit non-linear correction','1 sigma uncertainty'],linestyle=[2,0,1],col=[1,2,2],/bottom,/left,box=0
-;;     device,/close
+    device,filename=fitdir+'/'+obsid+'/'+obsid+'_gain_corrections.ps',/landscape,/color
+;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+', contam '+contam,linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
+;    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.1],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Corrections for ObsID '+obsid+' with test CALDB',linestyle=0,col=0,psym=-6,yr=[-0.02,0.02],/nodata
+    plot,en/1000.,gf-en/1000.,/xs,/ys,xr=[0.5,1.5],xtitle="Energy [keV]",ytitle="Delta Energy [Measured - Theoretical; keV]",title='Cor. for ObsID '+obsid,linestyle=0,col=0,psym=-6,yr=[-0.04,0.04],/nodata
+    oplot,en/1000.,gf-en/1000.,linestyle=2,col=1,psym=-2
+    oplot,en/1000.,new-en/1000.,linestyle=0,col=2,psym=-2
+    oplot,en/1000.,lo-en/1000.,linestyle=1,col=2
+    oplot,en/1000.,hi-en/1000.,linestyle=1,col=2
+    al_legend,['Linear corretion (gainfit)','Best-fit non-linear correction','1 sigma uncertainty'],linestyle=[2,0,1],col=[1,2,2],/bottom,/left,box=0
+    device,/close
 
 ; the correction
    
