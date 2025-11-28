@@ -143,6 +143,8 @@ def make_plots(args, date, data, chy, node):
         ylim = ax.get_ylim()
         ax.set_ylim(ax.get_ylim())
         ax.set_xlim(xlim)
+        if key == 'redchi' and os.environ["DET"] == 's3':
+            ax.set_ylim(1, 3)
 
        # from https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
         lines=[]
