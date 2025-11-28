@@ -41,7 +41,7 @@ for det in i3 s3; do
     ./plot_gainfits "$gainfits_txt"
     psmerge_xspec gain
 
-    echo '.run shift_lines.pro'  | gdl -args $obsids
+    echo '.run shift_lines.pro' | gdl
 
     # gdl never returns failure, so test that the output
     # line_shifts.xcm files are newer than gainfit.xcm
@@ -63,7 +63,7 @@ for det in i3 s3; do
 
     python3 ./plot_gain_corrections.py
 
-    echo '.run data_shift.pro'  | gdl -args $datadir/obs_info/$DET.txt
+    echo '.run data_shift.pro' | gdl
 
     # gdl never returns failure, so test that the output
     # evt2_energy_shift files are newer than linefit.xcm

@@ -2,29 +2,44 @@
 
 ; Apply gain correction to level=2 event file energies and update PI values.
 
-args=command_line_args()
+obsids=command_line_args(count=nargs)
+stdout=0
 
 spawn, './datadir', datadir
 fitdir=datadir+'/fits/'+getenv('CONTAMID')
 resdir=fitdir+'/results'
 
 ;; read in obs info to get data mode
-obsinfo=args[0]
-readcol,obsinfo,obsids,date,chx,chy,node,exp,rdmode,datamode,comment='#',format='(A5,F7.2,F5.1,F5.1,I1,F8.2,A5,A6)'
-
-get_lun, lun
-openw,lun,resdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
-printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi  mg11   mg11lo mg11hi'
+obsinfo=datadir+'/obs_info/'+getenv('DET')+'.txt'
+readcol,obsinfo,obs1,date,chx,chy,node,exp,rdmode,datamode,comment='#',format='(A5,F7.2,F5.1,F5.1,I1,F8.2,A5,A6)'
 
 ;; get best-fit energies:
-fit_results=resdir+'/linefits_'+getenv('DET')+'.txt'
-readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,mg11_energy,mg11lo,mg11hi,ne10_energy,ne10lo,ne10hi,ne9_energy,ne9lo,ne9hi,o8_energy,o8lo,o8hi,o7_energy,o7lo,o7hi,comment='#'
+linefit_results=resdir+'/linefits_'+getenv('DET')+'.txt'
+readcol,linefit_results,obs2,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,mg11_energy,mg11lo,mg11hi,ne10_energy,ne10lo,ne10hi,ne9_energy,ne9lo,ne9hi,o8_energy,o8lo,o8hi,o7_energy,o7lo,o7hi,comment='#'
 
 ;; get gainfit slope and offset:
-fit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
-readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
+gainfit_results=resdir+'/gainfits_'+getenv('DET')+'.txt'
+readcol,gainfit_results,obs3,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7err,cstat,dof,redchi,chi,slope,slope_err,offset,off_err,comment='#'
 
-;; FIXME: ensure all of the files have the same obsids
+if not array_equal(obs1, obs2) then begin
+   printf, -2, "Found differing Obsids in '"+obsinfo+"' and '"+linefit_results+"'"
+   exit, status=1
+endif
+if not array_equal(obs1, obs3) then begin
+   printf, -2, "Found differing Obsids in '"+obsinfo+"' and '"+gainfit_results+"'"
+   exit, status=1
+endif
+
+if not nargs then obsids=obs1
+
+if stdout then begin
+   lun=-1
+endif else begin
+   get_lun, lun
+   openw,lun,resdir+'/gain_correction_ratios_'+getenv('DET')+'.txt' ; output text file with ratios of best-fit energy/model energy
+endelse
+
+printf,lun,'# obsid  chx   chy  node  o7   o7lo   o7hi   o8     o8lo   o8hi   ne9    ne9lo  ne9hi  ne10   ne10lo ne10hi  mg11   mg11lo mg11hi'
 
 ;; set up things for plot
 ;peasecolr,white=white
@@ -38,9 +53,15 @@ readcol,fit_results,obs,cons,mg11,mg11err,ne10,ne10err,ne9,ne9err,o8,o8err,o7,o7
 !p.charthick=5
 set_plot,'ps'
 
-for i=0,n_elements(obsids)-1 do begin
+for ii=0,n_elements(obsids)-1 do begin
 
-   obsid=obsids[i]
+   i = where(obs1 eq obsids[ii])
+   if (1 eq -1) then begin
+      printf, -2, 'Did not find ObsID '+obsids[ii]+" in '"+obsinfo+"'"
+      exit, status=1
+   endif else i=i[0]
+   obsid = string(obsids[ii], format='%05d')
+
    infile=datadir+'/'+obsid+'/repro/acisf'+obsid+'_repro_evt2.fits'
    outfile=fitdir+'/'+obsid+'/'+obsid+'_evt2_energy_shift.fits'
 
@@ -137,7 +158,9 @@ for i=0,n_elements(obsids)-1 do begin
     
 endfor
 
-close, lun
-free_lun, lun
+if not stdout then begin
+   close, lun
+   free_lun, lun
+endif
 
 end

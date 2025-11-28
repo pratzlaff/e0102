@@ -89,7 +89,7 @@ for det in i3 s3; do
 
   # shift model line energies
   cd src
-  echo '.run shift_lines.pro'  | gdl -args $obsids
+  echo '.run shift_lines.pro' | gdl
   cd -
 
   # fit line energies
@@ -101,9 +101,9 @@ for det in i3 s3; do
 
   python3 ./plot_gain_corrections.py
 
-  # shift energies
+  # shift evt2 energies
   cd src
-  echo '.run data_shift.pro'  | gdl -args "$datadir/obs_info/$DET.txt"
+  echo '.run data_shift.pro' | gdl
   cd -
 
   # merge individual spline_test plots into "$resdir/spline_test_${DET}.pdf"
