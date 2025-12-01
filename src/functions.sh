@@ -45,6 +45,41 @@ obsid_year() {
     \grep -h "^${obsid}" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[1])'
 }
 
+energy_shift_plots()
+{
+    local obsids
+    [[ "$DET" =~ ^[is]3$ ]] || {
+	echo "DET must be i3|s3" 1>&2
+	return 1
+    }
+
+    [ -z "$CONTAMID" ] && {
+	echo "CONTAMID must be set" 1>&2
+	return 1
+    }
+
+    [ $# -ge 1 ] && {
+	obsids="$@"
+    } || {
+	obsids=$(obsids $DET)
+    }
+
+    obsids_=
+    for obsid in $obsids; do
+	obsids_+=" $(printf %05d $((10#$obsid)))"
+    done
+    obsids=$obsids_
+    parallel -j 16 python3 $srcdir/plot_energy_shift.py -o $datadir/fits/$CONTAMID/{}/{}_energy_shift.pdf {} ::: $obsids
+
+    pdffile=$datadir/fits/$CONTAMID/results/energy_shift_${DET}.pdf
+    files=
+    for obsid in $obsids; do
+	files+=" $datadir/fits/$CONTAMID/$obsid/${obsid}_energy_shift.pdf"
+    done
+    pdftk $files cat output $pdffile
+}
+
+
 psmerge_xspec()
 {
     local obsids

@@ -80,6 +80,8 @@ for det in i3 s3; do
     psmerge_gdl spline_test
     psmerge_gdl gain_corrections
 
+    energy_shift_plots
+
     parallel -j $nproc ./shift_pi ::: $obsids
 
     parallel -j $nproc ./shiftfit ::: $obsids
