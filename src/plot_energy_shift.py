@@ -50,7 +50,7 @@ def energy_shifts(args):
     
     mask = np.isnan(es_y)
     es_y[mask] = energies[mask] - gf_energies[mask]
-    return es_x*1000, es_y*1000
+    return es_x*1000, es_y*1000, mask
     
 def read_gainfits():
     obsid, slope, offset = np.loadtxt(get_gainfits(), unpack=True, usecols=(0, -4, -2))
@@ -82,7 +82,7 @@ def plot_energy_shift(args):
     evt = get_evtfile(args)
     evt_shifted = get_evtfile_shifted(args)
 
-    es_x, es_y = energy_shifts(args)
+    es_x, es_y, gain_mask = energy_shifts(args)
 
     obsid, energy = read_energy(evt)
     obsid, energy_shifted = read_energy(evt_shifted)
@@ -94,7 +94,9 @@ def plot_energy_shift(args):
     x = energy_shifted
     y = energy_shifted-energy
     plt.scatter(x, y, s=0.1, linewidths=0)
-    plt.plot(es_x, es_y, 'ok')
+    plt.plot(es_x, es_y, 'ok', label='Line fits')
+    if np.sum(gain_mask):
+        plt.plot(es_x[gain_mask], es_y[gain_mask], 'or', label='Gain fits')
     title = args.title
     if not title:
         contamid = os.environ.get('CONTAMID', None)
@@ -104,6 +106,7 @@ def plot_energy_shift(args):
     plt.title(title)
     plt.xlabel('Energy (eV)')
     plt.ylabel('Energy Shift (eV)')
+    plt.legend(frameon=False)
     plt.tight_layout()
     if args.outfile:
         plt.savefig(args.outfile)
