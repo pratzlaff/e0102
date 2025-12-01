@@ -3,7 +3,10 @@
 ; Apply gain correction to level=2 event file energies and update PI values.
 
 obsids=command_line_args(count=nargs)
-stdout=0
+
+; acting as a boolean, gain corrections ratios written to stdout if given
+; ObsIDs on command line
+stdout=nargs
 
 spawn, './datadir', datadir
 fitdir=datadir+'/fits/'+getenv('CONTAMID')
@@ -56,7 +59,7 @@ set_plot,'ps'
 for ii=0,n_elements(obsids)-1 do begin
 
    i = where(obs1 eq obsids[ii])
-   if (1 eq -1) then begin
+   if (i eq -1) then begin
       printf, -2, 'Did not find ObsID '+obsids[ii]+" in '"+obsinfo+"'"
       exit, status=1
    endif else i=i[0]

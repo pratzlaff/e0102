@@ -2,7 +2,9 @@
 
 obsids=command_line_args(count=nargs)
 
-stdout=0
+; acting as a boolean, XSPEC line shift commands written to stdout if
+; given ObsIDs on command line
+stdout=nargs
 
 spawn, './datadir', datadir
 contamid=getenv('CONTAMID')
