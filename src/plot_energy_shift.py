@@ -22,13 +22,12 @@ def gainfit_energies(args):
 def energy_shifts(args):
     gf_energies = gainfit_energies(args)
     energies = np.array((1.3522, 1.0217, 0.9221, 0.6536, 0.5739))
-    print(gf_energies)
     lf = read_linefits()
     obsid = lf[0]
     i = np.where(obsid == args.obsid)[0][0]
     if (len(lf) == 31):
-        es_x = np.array((lf[16][i], lf[19][i], lf[22][i], lf[25][i], lf[28][i]))
         es_x = energies
+        es_x = np.array((lf[16][i], lf[19][i], lf[22][i], lf[25][i], lf[28][i]))
         es_y = np.array((
             1.3522-lf[16][i],
             1.02170-lf[19][i],
@@ -39,8 +38,8 @@ def energy_shifts(args):
     else:
         gf_energies = gf_energies[1:]
         energies = energies[1:]
-        es_x = np.array((lf[14][i], lf[17][i], lf[20][i], lf[23][i]))
         es_x = energies
+        es_x = np.array((lf[14][i], lf[17][i], lf[20][i], lf[23][i]))
         es_y = np.array((
             1.02170-lf[14][i],
             0.9221-lf[17][i],
@@ -49,6 +48,7 @@ def energy_shifts(args):
         ))
     
     mask = np.isnan(es_y)
+    es_x[mask] = gf_energies[mask]
     es_y[mask] = energies[mask] - gf_energies[mask]
     return es_x*1000, es_y*1000, mask
     
@@ -91,7 +91,7 @@ def plot_energy_shift(args):
     energy = energy[ii]
     energy_shifted = energy_shifted[ii]
 
-    x = energy_shifted
+    x = energy
     y = energy_shifted-energy
     plt.scatter(x, y, s=0.1, linewidths=0)
     plt.plot(es_x, es_y, 'ok', label='Line fits')
