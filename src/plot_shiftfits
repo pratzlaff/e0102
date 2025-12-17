@@ -75,7 +75,7 @@ iplot data resid
 rescale x $emin $emax
 label otop $CONTAMID, Gain correction applied to the data
 label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-stat=$redchi
-label 1 vpos 0.25 0.8 color ${chipy_ci[$chipy]} csize 2 "$chipy ChipY"
+label 2 vpos 0.25 0.8 color ${chipy_ci[$chipy]} csize 2 "$chipy ChipY"
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"
