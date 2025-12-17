@@ -1,6 +1,7 @@
 import argparse
 import astropy.io.fits
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size':18})
 import os
 import numpy as np
 import sys
@@ -93,6 +94,7 @@ def plot_energy_shift(args):
 
     x = energy
     y = energy_shifted-energy
+    fig = plt.figure(figsize=(11, 8.5))
     plt.scatter(x, y, s=0.1, linewidths=0)
     plt.plot(es_x, es_y, 'ok', label='Line fits')
     if np.sum(gain_mask):
@@ -106,7 +108,7 @@ def plot_energy_shift(args):
     plt.title(title)
     plt.xlabel('Energy (eV)')
     plt.ylabel('Energy Shift (eV)')
-    plt.legend(frameon=False)
+    plt.legend()
     plt.tight_layout()
     if args.outfile:
         plt.savefig(args.outfile)
