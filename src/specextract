@@ -50,9 +50,6 @@ ciao
 
 . "$SCRIPTDIR/tmppdir.sh"
 
-[ -z "$CONTAMFILE" ] &&
-    CONTAMFILE=$(\ls $CALDB/data/chandra/acis/contam/acisD1999-08-13contam*.fits | tail -1)
-
 srcreg="$datadir/reg/src.reg"
 
 for obsid in $obsids; do
@@ -75,9 +72,10 @@ for obsid in $obsids; do
 
     acis_set_ardlib "$bpix"
 
-    for i in $(seq 0 9); do
-	pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
-    done
+    [ -n "$CONTAMFILE" ] &&
+	for i in $(seq 0 9); do
+	    pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
+	done
 
     specextract \
 	infile="$evt2[sky=region($srcreg)]" \
