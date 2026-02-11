@@ -27,13 +27,15 @@ def read_obsinfo(obsinfo):
     return year, lo, mid, hi
 
 def read_shiftfits(shiftfits,*,is_old):
+    usecols = list(range(4))
     if is_old:
-        usecols = [0,1] + list(range(4,4+16))
+        usecols += list(range(4,4+16))
     else:
-        usecols = [0,1] + list(range(8,8+16))
-    obsid,c,ne10,ne10err,ne10lo,ne10hi,ne9,ne9err,ne9lo,ne9hi,o8,o8err,o8lo,o8hi,o7,o7err,o7lo,o7hi = np.loadtxt(shiftfits, unpack=True, usecols=usecols)
+        usecols += list(range(8,8+16))
+    obsid,c,clo,chi,ne10,ne10err,ne10lo,ne10hi,ne9,ne9err,ne9lo,ne9hi,o8,o8err,o8lo,o8hi,o7,o7err,o7lo,o7hi = np.loadtxt(shiftfits, unpack=True, usecols=usecols)
     data = { 'obsid':obsid.astype(int),
              'cons':c,
+             'conserr':0.5*(chi-clo),
              'O7':o7,
              'O7err':0.5*(o7hi-o7lo),
              'O8':o8,
@@ -43,9 +45,9 @@ def read_shiftfits(shiftfits,*,is_old):
              'Ne10':ne10,
              'Ne10err':0.5*(ne10hi-ne10lo),
             }
-    for k in data:
-        if k not in ('obsid', 'cons'):
-            data[k] *= data['cons']
+    for k in 'O7', 'O8', 'Ne9', 'Ne10':
+        data[k+'err'] = np.abs(data['cons']*data[k])*np.sqrt(((data['conserr']/data['cons'])**2+(data[k+'err']/data[k])**2))
+        data[k] *= data['cons']
     return data
 
 def cmp_old_new(args):
@@ -78,7 +80,7 @@ def cmp_old_new(args):
 
             ratio = float(a/b)
 
-            ratio_err = float(np.sqrt(ratio**2*((aerr/a)**2+(berr/b)**2)))
+            ratio_err = float(np.abs(ratio)*np.sqrt(((aerr/a)**2+(berr/b)**2)))
                 
             #sys.stderr.write(f'{int(o)=}, old={float(old[e][i]):3g}, new={float(new[e][j]):3g}, {a=:3g}, {aerr=:3g}, {b=:3g}, {berr=:3g} , {ratio=:3g}, {ratio_err=:3g}\n')
             ratios[e].append(ratio)
@@ -93,7 +95,7 @@ def cmp_old_new(args):
         fig, axes = plt.subplots(2, 2, sharex=True, figsize=(11,8.5))
         fig.suptitle('E0102 S3 Best-Fit Normalizations: ', fontsize=16, x=0.1, ha='left')
         fig.text(x=0.55, y=0.96, s=regstr[j], color=colors[j], transform=fig.transFigure, horizontalalignment='center', fontsize=16)
-        for k, line in enumerate(list(ratios.keys())):
+        for k, line in enumerate(ratios):
 
             row = int(k / 2)
             col = k % 2
@@ -104,6 +106,7 @@ def cmp_old_new(args):
                 try:
                     i = np.where(old['obsid']==o)[0][0]
                 except:
+                    sys.stderr.write(f'skipping {o}, {line}, {regstr[j]}\n')
                     continue
                 obsids.append(o)
                 x.append(years[i])
@@ -122,12 +125,12 @@ def cmp_old_new(args):
                ax.set_ylabel(r'$\frac{\text{new}-\text{old}}{\text{new}}$')
 
         plt.tight_layout()
-        if (args.pdf):
+        if args.pdf:
             pdf.savefig(fig)
         else:
             plt.show()
 
-    if (args.pdf):
+    if args.pdf:
         pdf.close()
 
 def main():
