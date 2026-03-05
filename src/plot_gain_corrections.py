@@ -9,6 +9,23 @@ srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
 gainfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gainfits_{os.environ["DET"].lower()}.txt'
 linefits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{os.environ["DET"].lower()}.txt'
+obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
+
+def get_positions():
+    global obsinfo
+    obsid, chipy = np.loadtxt(obsinfo, unpack=True, usecols=(0,3))
+    obsid = obsid.astype(int).tolist()
+    chipy = chipy.tolist()
+
+    pos = { }
+    for o, c in zip(obsid, chipy):
+        if c < 1/3*1024:
+            pos[o] = 'Low'
+        elif c < 2/3*1024:
+            pos[o] = 'Mid'
+        else:
+            pos[o] = 'High'
+    return pos
 
 def read_linefits():
     global linefits
@@ -25,6 +42,12 @@ def read_gainfits():
 
 def plot_gain_corrections(args):
     global gainfits, linefits
+
+    colors = { 'Low':'b',
+               'Mid':'r',
+               'High':'#39FF14'
+              }
+
     en = { 'O7':0.573900,
            'O8':0.653600,
            'Ne9':0.922100,
@@ -48,6 +71,8 @@ def plot_gain_corrections(args):
 
     obsids = obsids1.astype(int)
 
+    positions = get_positions()
+
     for i, obsid in enumerate(obsids):
         new = np.array([ en_new[l][i] for l in lines ])
         lo_ = np.array([ lo[l][i] for l in lines ])
@@ -66,6 +91,7 @@ def plot_gain_corrections(args):
         ax.legend(frameon=False, loc='lower left')
         ax.set_xlim(0.5, 1.5)
         ax.set_ylim(-.04, .04)
+        ax.text(0.05, 0.85, positions[obsid]+' ChipY', transform=plt.gca().transAxes, fontsize=18, color=colors[positions[obsid]])
         plt.tight_layout()
 
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_gain_corrections.pdf'
