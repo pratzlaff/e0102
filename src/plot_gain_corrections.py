@@ -4,6 +4,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
 import os
 from scipy import interpolate
+import sys
 
 srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
@@ -63,17 +64,20 @@ def plot_gain_corrections(args):
     spline_en = np.array([0.001] + [ en[l] for l in lines ] + [1.6, 2.0])*1000
     en = np.array([ en[l] for l in lines ])
 
-    pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{os.environ["DET"].lower()}.pdf'
-    pdf_gc = PdfPages(pdffile)
+    if args.obsids is None:
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{os.environ["DET"].lower()}.pdf'
+        pdf_gc = PdfPages(pdffile)
 
-    pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{os.environ["DET"].lower()}.pdf'
-    pdf_st = PdfPages(pdffile)
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{os.environ["DET"].lower()}.pdf'
+        pdf_st = PdfPages(pdffile)
 
     obsids = obsids1.astype(int)
 
     positions = get_positions()
 
     for i, obsid in enumerate(obsids):
+        if args.obsids is not None and obsid not in args.obsids:
+            continue
         new = np.array([ en_new[l][i] for l in lines ])
         lo_ = np.array([ lo[l][i] for l in lines ])
         hi_ = np.array([ hi[l][i] for l in lines ])
@@ -97,13 +101,15 @@ def plot_gain_corrections(args):
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_gain_corrections.pdf'
         plt.savefig(pdffile)
 
-        pdf_gc.savefig(fig)
+        if args.obsids is None:
+            pdf_gc.savefig(fig)
 
         plt.close()
 
         spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.6, 2.0])*1000
+        mask = ~np.isnan(spline_new)
         x = np.arange(1500.)
-        tck = interpolate.splrep(spline_new, spline_en)
+        tck = interpolate.splrep(spline_new[mask], spline_en[mask])
         shift = interpolate.splev(x, tck)
 
         fig, ax = plt.subplots()
@@ -114,17 +120,18 @@ def plot_gain_corrections(args):
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_spline_test.pdf'
         plt.savefig(pdffile)
 
-        pdf_st.savefig(fig)
+        if args.obsids is None:
+            pdf_st.savefig(fig)
 
         plt.close()
 
-    pdf_gc.close()
-    pdf_st.close()
+    if args.obsids is None:
+        pdf_gc.close()
+        pdf_st.close()
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Plot gain fit corrections.'
-    )
+    parser = argparse.ArgumentParser(description='Plot gain fit corrections.')
+    parser.add_argument('--obsids', nargs='+', type=int)
     args = parser.parse_args()
 
     plot_gain_corrections(args)
