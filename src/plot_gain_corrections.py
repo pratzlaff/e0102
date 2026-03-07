@@ -110,8 +110,12 @@ def plot_gain_corrections(args):
         ii, = np.where(np.isnan(spline_new))
         spline_new[ii] = gf[ii-1]*1e3
         x = np.arange(1250)+350
-        tck = interpolate.splrep(spline_new, spline_en)
-        shift = interpolate.splev(x, tck)
+        x = np.arange(1500)
+        if False:
+            # B-spline
+            shift = interpolate.make_splrep(spline_new, spline_en)(x)
+        else:
+            shift = interpolate.CubicSpline(spline_new, spline_en, bc_type='natural')(x)
 
         fig, ax = plt.subplots()
         ax.plot(x, shift, 'k-')
