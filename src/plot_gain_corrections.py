@@ -107,9 +107,10 @@ def plot_gain_corrections(args):
         plt.close()
 
         spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.6, 2.0])*1000
-        mask = ~np.isnan(spline_new)
-        x = np.arange(1500.)
-        tck = interpolate.splrep(spline_new[mask], spline_en[mask])
+        ii, = np.where(np.isnan(spline_new))
+        spline_new[ii] = gf[ii-1]*1e3
+        x = np.arange(1250)+350
+        tck = interpolate.splrep(spline_new, spline_en)
         shift = interpolate.splev(x, tck)
 
         fig, ax = plt.subplots()
