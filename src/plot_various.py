@@ -1,4 +1,6 @@
 import argparse
+import astropy.io.fits
+import glob
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
@@ -12,6 +14,61 @@ gainfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gainfits_{os.environ[
 linefits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{os.environ["DET"].lower()}.txt'
 obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
 
+def get_mtl_file(obsid):
+    obsid = f'{int(obsid):05d}'
+    return glob.glob(f'{datadir}/{obsid}/repro/acisf{obsid}_*_mtl1.fits')[0]
+
+def read_mtl_file(mtl):
+    with astropy.io.fits.open(mtl) as hdulist:
+        data = hdulist[1].data
+        return data['time'], data['fp_temp']
+
+def make_gain_correction_plot(obsid, en, gf, new, lo, hi, position):
+    colors = { 'Low':'b',
+               'Mid':'r',
+               'High':'#39FF14'
+              }
+    fig, ax = plt.subplots()
+    ax.plot(en, gf-en, 'bo', linestyle='dashed', label='Linear correction (gainfit)')
+    ax.plot(en, new-en, 'ro-', label='Best-fit non-linear correction')
+    ax.plot(en, lo-en, color='r', linestyle='dotted', label='1-σ uncertainty')
+    ax.plot(en, hi-en, color='r', linestyle='dotted')
+    ax.set_title(f'Cor. for obsid {obsid}, {os.environ["CONTAMID"]}')
+    ax.set_xlabel('Energy (keV)')
+    ax.set_ylabel('ΔE (Measured - Theoretical; keV)')
+    ax.legend(frameon=False, loc='lower left')
+    ax.set_xlim(0.5, 1.5)
+    ax.set_ylim(-.04, .04)
+    ax.text(0.05, 0.85, position+' ChipY', transform=plt.gca().transAxes, fontsize=18, color=colors[position])
+    plt.tight_layout()
+    return fig
+
+def make_fp_temp_plot(obsid):
+    mtl = get_mtl_file(obsid)
+    time, fp_temp = read_mtl_file(mtl)
+    fig, ax = plt.subplots()
+    ax.scatter((time-time[0])/1e3, fp_temp-273.15, s=1)
+    ax.set_title(f'ObsID: {int(obsid):05d}')
+    ax.set_xlabel('Time since observation start [ks]')
+    ax.set_ylabel('FP_TEMP [C]')
+    plt.tight_layout()
+    return fig
+
+def make_spline_test_plot(obsid, spline_new, spline_en):
+    x = np.arange(1250)+350
+    x = np.arange(1500)
+    if False:
+        # B-spline
+        shift = interpolate.make_splrep(spline_new, spline_en)(x)
+    else:
+        shift = interpolate.CubicSpline(spline_new, spline_en, bc_type='natural')(x)
+
+    fig, ax = plt.subplots()
+    ax.plot(x, shift, 'k-')
+    ax.set_title(f'ObsID {obsid:05d}')
+    plt.tight_layout()
+    return fig
+        
 def get_positions():
     global obsinfo
     obsid, chipy = np.loadtxt(obsinfo, unpack=True, usecols=(0,3))
@@ -41,13 +98,8 @@ def read_gainfits():
     obsids, slope, offset = np.loadtxt(gainfits, usecols=(0,-4,-2), unpack=True)
     return obsids, slope, offset
 
-def plot_gain_corrections(args):
+def plot_various(args):
     global gainfits, linefits
-
-    colors = { 'Low':'b',
-               'Mid':'r',
-               'High':'#39FF14'
-              }
 
     en = { 'O7':0.573900,
            'O8':0.653600,
@@ -71,6 +123,9 @@ def plot_gain_corrections(args):
         pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{os.environ["DET"].lower()}.pdf'
         pdf_st = PdfPages(pdffile)
 
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/fp_temp_{os.environ["DET"].lower()}.pdf'
+        pdf_fptemp = PdfPages(pdffile)
+
     obsids = obsids1.astype(int)
 
     positions = get_positions()
@@ -83,63 +138,42 @@ def plot_gain_corrections(args):
         hi_ = np.array([ hi[l][i] for l in lines ])
         gf = en * slope[i] + offset[i]
 
-        fig, ax = plt.subplots()
-
-        ax.plot(en, gf-en, 'bo', linestyle='dashed', label='Linear correction (gainfit)')
-        ax.plot(en, new-en, 'ro-', label='Best-fit non-linear correction')
-        ax.plot(en, lo_-en, color='r', linestyle='dotted', label='1-σ uncertainty')
-        ax.plot(en, hi_-en, color='r', linestyle='dotted')
-        ax.set_title(f'Cor. for obsid {obsid}, {os.environ["CONTAMID"]}')
-        ax.set_xlabel('Energy (keV)')
-        ax.set_ylabel('ΔE (Measured - Theoretical; keV)')
-        ax.legend(frameon=False, loc='lower left')
-        ax.set_xlim(0.5, 1.5)
-        ax.set_ylim(-.04, .04)
-        ax.text(0.05, 0.85, positions[obsid]+' ChipY', transform=plt.gca().transAxes, fontsize=18, color=colors[positions[obsid]])
-        plt.tight_layout()
-
+        fig = make_gain_correction_plot(obsid, en, gf, new, lo_, hi_, positions[obsid])
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_gain_corrections.pdf'
         plt.savefig(pdffile)
-
         if args.obsids is None:
             pdf_gc.savefig(fig)
-
         plt.close()
 
         spline_new = np.array([0.001] + [ en_new[l][i] for l in lines ] + [1.6, 2.0])*1000
         ii, = np.where(np.isnan(spline_new))
         spline_new[ii] = gf[ii-1]*1e3
-        x = np.arange(1250)+350
-        x = np.arange(1500)
-        if False:
-            # B-spline
-            shift = interpolate.make_splrep(spline_new, spline_en)(x)
-        else:
-            shift = interpolate.CubicSpline(spline_new, spline_en, bc_type='natural')(x)
 
-        fig, ax = plt.subplots()
-        ax.plot(x, shift, 'k-')
-        ax.set_title(f'ObsID {obsid:05d}')
-        plt.tight_layout()
-        
+        fig = make_spline_test_plot(obsid, spline_new, spline_en)
         pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_spline_test.pdf'
         plt.savefig(pdffile)
-
         if args.obsids is None:
             pdf_st.savefig(fig)
+        plt.close()
 
+        fig = make_fp_temp_plot(obsid)
+        pdffile=f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid:05d}/{obsid:05d}_fp_temp.pdf'
+        plt.savefig(pdffile)
+        if args.obsids is None:
+            pdf_fptemp.savefig(fig)
         plt.close()
 
     if args.obsids is None:
         pdf_gc.close()
         pdf_st.close()
+        pdf_fptemp.close()
 
 def main():
-    parser = argparse.ArgumentParser(description='Plot gain fit corrections.')
+    parser = argparse.ArgumentParser(description='Plot gain corrections, splines, fp_temp.')
     parser.add_argument('--obsids', nargs='+', type=int)
     args = parser.parse_args()
 
-    plot_gain_corrections(args)
+    plot_various(args)
 
 if __name__ == '__main__':
     main()
