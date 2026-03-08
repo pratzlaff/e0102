@@ -65,7 +65,7 @@ for resp120c in '' yes; do
 	./plot_linefits "$linefits_txt"
 	psmerge_xspec line
 
-	python3 ./plot_gain_corrections.py
+	python3 ./plot_various.py
 
 	echo '.run data_shift.pro' | gdl
 
