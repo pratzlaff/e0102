@@ -99,7 +99,8 @@ for det in i3 s3; do
   src/plot_linefits "$linefits_txt"
   psmerge_xspec line
 
-  python3 ./plot_gain_corrections.py
+  # create plots of gain corrections, splines, fp_temp
+  python3 ./plot_various.py
 
   # shift evt2 energies
   cd src
