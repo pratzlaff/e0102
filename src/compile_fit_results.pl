@@ -146,7 +146,11 @@ sub get_results {
 	    $F[2] eq $comps{$key}[1] and
 	    $F[4] eq $comps{$key}[2]
 	   ) {
-	  if ($F[4] eq 'LineE') {
+	  if ($F[6] eq '=') {
+	    delete $val{$key};
+	    delete $err{$key};
+	  }
+	  elsif ($F[4] eq 'LineE') {
 	    $val{$key} = $F[6];
 	    $err{$key} = $F[8];
 	  } else {

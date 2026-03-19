@@ -4,6 +4,9 @@ datadir=/data/legs/rpete/data/e0102
 o7_cutoff=2020
 o8_cutoff=2023
 
+# python3 Ne_ratio.py /data/legs/rpete/data/e0102/fits/ciao4.18.0_caldb4.12.3/results/shiftfits_s3.txt
+Ne_ratio=0.9528
+
 obsids()
 {
     [ $# -eq 1 ] || {
@@ -121,7 +124,7 @@ psmerge_xspec()
 	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$DET"  | perl -F= -anle 'print $F[0]')
 	    [ -n "$obsid_simul" ] && echo "$datadir/fits/$CONTAMID/${obsid_simul}/${obsid_simul}_${type}fit.ps"
 	} || :
-    done | xargs psmerge -o - | ps2pdf - "$pdffile"
+    done | xargs cat | ps2pdf - "$pdffile"
 }
 
 psmerge_gain_corrections()
@@ -146,7 +149,7 @@ psmerge_gain_corrections()
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_gain_corrections.ps"
-    done | xargs psmerge -o - | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
+    done | xargs cat | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
 }
 
 psmerge_gdl()
@@ -179,7 +182,7 @@ psmerge_gdl()
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}.ps"
-    done | xargs psmerge -o - | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
+    done | xargs cat | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
 }
 
 # see /data/paul11/plucinsk/chandra/data/e0102/I3/99999/repro_ciao4.15.1_caldb4.10.4/combine_spectra.com

@@ -8,7 +8,7 @@
 
 set -eo pipefail
 
-TEMP=$(getopt -o 'h' --long 'example,help' -- "$@") || {
+TEMP=$(getopt -o 'h' --long 'tieNe9,help' -- "$@") || {
 	echo 'Terminating...' >&2
 	exit 1
 }
@@ -18,11 +18,11 @@ unset TEMP
 while true; do
     case "$1" in
 	'-h' | '--help')
-	    echo "Usage: $0 [-h|--help] [--example] [obsid1 obsid2 ...]" >&2
+	    echo "Usage: $0 [-h|--help] [--tieNe9] [obsid1 obsid2 ...]" >&2
 	    exit
 	    ;;
-	'--example')
-	    example=yes; shift; continue
+	'--tieNe9')
+	    tieNe9=yes; shift; continue
 	    ;;
 	'--')
 	    shift; break
@@ -85,6 +85,8 @@ for obsid in $obsids; do
 	o8_error=''
     }
 
+    [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$Ne_ratio"
+
     cat - <<EOP >$fit_file
 log $log_file
 query yes
@@ -97,6 +99,7 @@ ignore **:$emax-**
 statistic cstat
 thaw 1
 thaw 37
+$Ne9norm
 ${o7_freeze}
 ${o8_freeze}
 fit

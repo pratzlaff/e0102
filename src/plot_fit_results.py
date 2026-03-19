@@ -111,6 +111,9 @@ def make_plots(args, date, data, chy, node):
         chy = chy[ii]
         node = node[ii]
 
+        if not (~np.isnan(y)).sum():
+            continue
+
         fig, ax = plt.subplots()
 
         has_nodes = []
