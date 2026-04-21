@@ -12,16 +12,18 @@ def read_obsinfo():
     return obsid, date
 
 def read_shiftfits(shiftfits):
-    data = np.loadtxt(shiftfits, unpack=True, usecols=(0,1,2,3,4,6,7,8,10,11,12,14,15,16,18,19,20,22,23))
-    keys = ('obsid',
-            'cons', 'conslo', 'conshi',
-            'Mg11', 'Mg11lo', 'Mg11hi',
-            'Ne10', 'Ne10lo', 'Ne10hi',
-            'Ne9', 'Ne9lo', 'Ne9hi',
-            'O8', 'O8lo', 'O8hi',
-            'O7', 'O7lo', 'O7hi',
-            )
-    data = { keys[i] : d for i, d in enumerate(data) }
+    col_names = (
+        'obsid',
+        'cons', 'conslo', 'conshi',
+        'Mg11', 'Mg11lo', 'Mg11hi',
+        'Ne10', 'Ne10lo', 'Ne10hi',
+        'Ne9', 'Ne9lo', 'Ne9hi',
+        'O8', 'O8lo', 'O8hi',
+        'O7', 'O7lo', 'O7hi',
+    )
+    col_ind = (0,1,2,3,4,6,7,8,10,11,12,14,15,16,18,19,20,22,23)
+    data = np.loadtxt(shiftfits, unpack=True, usecols=col_ind)
+    data = { n:d for n, d in zip(col_names, data) }
     for k in 'O7', 'O7lo', 'O7hi':
         data[k] /= 2.09009
     return data
@@ -29,13 +31,12 @@ def read_shiftfits(shiftfits):
 def mean_fit_values(args):
     data = read_shiftfits(args.shiftfits)
     obsid, date = read_obsinfo()
-    dates = { obsid[i]:date[i] for i in range(len(date)) }
+    dates = { o:d for o,d in zip(obsid, date) }
     ii = []
     for i, o in enumerate(data['obsid']):
         d = dates.get(o, 3000)
         if d>=args.ymin and d<=args.ymax:
             ii.append(i)
-    ii = np.array(ii)
     means = []
     output = ('cons', 'conslo', 'conshi',
               'O7', 'O7lo', 'O7hi',
