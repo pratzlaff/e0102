@@ -103,6 +103,9 @@ def make_plots(args, date, data, chy, node):
         if key == 'redchi' or key == 'cons':
             factor = np.ones(x.shape)
 
+        # for the case where parameter 1 is frozen
+        factor[np.isnan(factor)] = 1
+
         ii = x<2037
         x = x[ii]
         y = y[ii]*factor[ii]
