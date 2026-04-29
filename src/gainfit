@@ -8,21 +8,26 @@
 
 set -eo pipefail
 
-TEMP=$(getopt -o 'h' --long 'help,tieNe9' -- "$@") || {
+TEMP=$(getopt -o 'h' --long 'help,tieNe9,nothawcons' -- "$@") || {
 	echo 'Terminating...' >&2
 	exit 1
 }
 eval set -- "$TEMP"
 unset TEMP
 
+thawcons=yes
+
 while true; do
     case "$1" in
 	'-h' | '--help')
-	    echo "Usage: $0 [-h|--help] [--tieNe9] [obsid1 obsid2 ...]" >&2
+	    echo "Usage: $0 [-h|--help] [--tieNe9] [--nothawcons] [obsid1 obsid2 ...]" >&2
 	    exit
 	    ;;
 	'--tieNe9')
 	    tieNe9=yes; shift; continue
+	    ;;
+	'--nothawcons')
+	    thawcons=no; shift; continue
 	    ;;
 	'--')
 	    shift; break
@@ -75,6 +80,9 @@ for obsid in $obsids; do
 
     [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$Ne_ratio"
 
+    thawCons='thaw 1'
+    [ "$thawcons" = no ] && thawCons=''
+
     cat - <<EOP >$fit_file
 log $log_file
 query yes
@@ -84,7 +92,7 @@ ignore **:**-$emin
 ignore **:$emax-**
 @$model
 statistic cstat
-thaw 1
+$thawCons
 thaw 37
 $Ne9norm
 ${o7_freeze}
