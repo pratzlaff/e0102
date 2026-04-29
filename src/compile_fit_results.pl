@@ -212,18 +212,19 @@ sub get_results {
 sub print_fit_gainfit {
   my ($obs, $val, $err, $lo, $hi, $stat) = @_;
 
+  exists $val->{Cons} or $val->{Cons} = 'nan';
+
   my @fmt = qw/ %5s %5.3f /;
   my @p = ($obs, $val->{Cons});
 
   for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
-      push @fmt, qw/ %8.3e %6.1e /;
     }
     else {
       push(@p, 'nan', 'nan');
-      push @fmt, qw/ %s %s /;
     }
+    push @fmt, qw/ %8.3e %6.1e /;
   }
 
   push @p, @{$stat}{qw/ cstat dof redchi chi /};
@@ -244,18 +245,19 @@ sub print_fit_gainfit {
 sub print_fit_linefit {
   my ($obs, $val, $err, $lo, $hi, $stat) = @_;
 
+  exists $val->{Cons} or $val->{Cons} = 'nan';
+
   my @fmt = qw/ %5s %5.3f /;
   my @p = ($obs, $val->{Cons});
 
   for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err));
-      push @fmt, qw/ %8.3e %6.1e /;
     }
     else {
       push(@p, 'nan', 'nan');
-      push @fmt, qw/ %s %s /;
     }
+    push @fmt, qw/ %8.3e %6.1e /;
   }
 
   push @p, @{$stat}{qw/ cstat dof redchi chi /};
@@ -264,12 +266,11 @@ sub print_fit_linefit {
   for my $p (qw/ Mg11en Ne10en Ne9en O8en O7en /) {
     if (exists $val->{$p} and exists $lo->{$p}) {
       push(@p, map { $_->{$p} } ($val, $lo, $hi));
-      push @fmt, qw/ %7.5f %7.5f %7.5f /;
     }
     else {
       push(@p, 'nan', 'nan', 'nan');
-      push @fmt, qw/ %s %s %s /;
     }
+    push @fmt, qw/ %7.5f %7.5f %7.5f /;
   }
 
   printf join("\t", @fmt)."\n", @p;
@@ -278,18 +279,23 @@ sub print_fit_linefit {
 sub print_fit_shiftfit {
   my ($obs, $val, $err, $lo, $hi, $stat) = @_;
 
+  if (not exists $val->{Cons}) {
+    $val->{Cons} = 'nan';
+    $lo->{Cons} = 'nan';
+    $hi->{Cons} = 'nan';
+  }
+
   my @fmt = ('%5s', ('%5.3f')x3);
   my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
 
   for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
-      push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;
     }
     else {
       push(@p, 'nan', 'nan', 'nan', 'nan');
-      push @fmt, qw/ %s %s %s %s /;
     }
+    push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;
   }
 
   push @p, @{$stat}{qw/ cstat dof redchi chi /};
