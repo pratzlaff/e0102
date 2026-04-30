@@ -52,6 +52,8 @@ ciao
 
 srcreg="$datadir/reg/src.reg"
 
+specextract=specextract
+
 for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
 
@@ -73,11 +75,15 @@ for obsid in $obsids; do
     acis_set_ardlib "$bpix"
 
     [ -n "$CONTAMFILE" ] &&
-	for i in $(seq 0 9); do
-	    pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
-	done
+	if [ "$CONTAMFILE" = NONE ]; then
+	    specextract="$SCRIPTDIR/ciao_mod/specextract"
+	else
+	    for i in $(seq 0 9); do
+		pset ardlib AXAF_ACIS${i}_CONTAM_FILE="$CONTAMFILE[AXAF_CONTAM$(( i+1 ))]"
+	    done
+	fi
 
-    specextract \
+    $specextract \
 	infile="$evt2[sky=region($srcreg)]" \
 	outroot="$fitdir/${obsid}_" \
 	bkgfile="$evt2[sky=region($bkgreg)]" \
@@ -86,7 +92,7 @@ for obsid in $obsids; do
 	badpixfile="$bpix" \
 	weight=yes \
 	correct=no \
-	verbose=3 \
+	verbose=5 \
 	grouptype=NUM_CTS \
 	binspec=30 \
 	clobber=yes \
