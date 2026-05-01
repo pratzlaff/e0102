@@ -10,6 +10,9 @@ export CONTAMID=$(src/ciaostr)
 export DET=all
 src/download
 src/repro
+
+# create -120C evt2 files
+src/evt2-120C
 ```
 The destination is `$datadir` which is set in `src/functions.sh`.
 Optionally, reorder the `all.lst` by OBS-DATE,
