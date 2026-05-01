@@ -1,5 +1,7 @@
 #! /bin/bash
 
 set -eo pipefail
-
+. ~/.bash_aliases
+shopt -s expand_aliases
+ciao 1>/dev/null 2>&1
 ciaover | perl -le '@l=<>; print "ciao".+(split '"' '"', $l[0])[1]."_caldb".+(split '"' '"', $l[2])[2]'
