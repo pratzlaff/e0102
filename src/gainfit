@@ -69,6 +69,7 @@ for obsid in $obsids; do
     save_file="$fitdir/${obsid}_gainfit.save"
     fit_file="$fitdir/${obsid}_gainfit.xcm"
     ps_file="$fitdir/${obsid}_gainfit.ps"
+    pdf_file="$fitdir/${obsid}_gainfit.pdf"
     rm -f "$save_file"
 
     o7_freeze=
@@ -120,5 +121,6 @@ weight model
 save all $save_file
 EOP
     xspec < "$fit_file"
+    ps2pdf "$ps_file" "$pdf_file"
 done
 

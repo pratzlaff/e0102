@@ -89,6 +89,7 @@ fit_obsid() {
     local save_file="$fitdir/${obsid}_shiftfit.save"
     local fit_file="$fitdir/${obsid}_shiftfit.xcm"
     local ps_file="$fitdir/${obsid}_shiftfit.ps"
+    local pdf_file="$fitdir/${obsid}_shiftfit.pdf"
     rm -f "$save_file"
 
     o7_freeze=
@@ -158,6 +159,7 @@ weight model
 save all $save_file
 EOP
     xspec < "$fit_file"
+    ps2pdf "$ps_file" "$pdf_file"
 }
 
 for obsid in $obsids; do

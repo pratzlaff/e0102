@@ -71,6 +71,7 @@ for obsid in $obsids; do
     save_file="$fitdir/${obsid}_linefit.save"
     fit_file="$fitdir/${obsid}_linefit.xcm"
     ps_file="$fitdir/${obsid}_linefit.ps"
+    pdf_file="$fitdir/${obsid}_linefit.pdf"
     rm -f "$save_file"
 
     o7_error='error max 4.0 1. 119'
@@ -140,5 +141,6 @@ weight model
 save all $save_file
 EOP
     xspec < "$fit_file"
+    ps2pdf "$ps_file" "$pdf_file"
 done
 
