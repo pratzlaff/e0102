@@ -47,6 +47,7 @@ plot_shiftfit() {
     local savefile="$fitdir/${obsid}_shiftfit.save"
     local plotfile="$fitdir/${obsid}_shiftfit_plot.xcm"
     local psfile="$fitdir/${obsid}_shiftfit.ps"
+    local pdffile="$fitdir/${obsid}_shiftfit.pdf"
 
     local obsid_chipy=$obsid
 
@@ -79,6 +80,7 @@ label 2 vpos 0.25 0.8 color ${chipy_ci[$chipy]} csize 2 "$chipy ChipY"
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"
+    ps2pdf "$psfile" "$pdffile"
     cd -
 }
 

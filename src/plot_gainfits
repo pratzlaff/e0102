@@ -47,6 +47,7 @@ plot_gainfit() {
     local savefile="$fitdir/${obsid}_gainfit.save"
     local plotfile="$fitdir/${obsid}_gainfit_plot.xcm"
     local psfile="$fitdir/${obsid}_gainfit.ps"
+    local pdffile="$fitdir/${obsid}_gainfit.pdf"
 
     local date=$(obsid_date $obsid)
 
@@ -63,6 +64,7 @@ label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-
 hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"
+    ps2pdf "$psfile" "$pdffile"
     cd -
 }
 
