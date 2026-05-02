@@ -1,0 +1,101 @@
+#! /bin/bash
+
+set -eo pipefail
+
+. ./functions.sh
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+. ~/python3_venv/bin/activate
+
+nproc=16
+
+#contam=N9816
+#export CONTAMFILE=/data/legs/rpete/flight/e0102/data/contam/acisD1999-08-13contam${contam}.fits
+
+tieNe9='--tieNe9'
+
+export CONTAMID=$(./ciaostr)_test
+
+for det in i3 s3; do
+    export DET=$det
+
+    datadir=$(./datadir)
+
+    obsids=$(obsids $det)
+
+    fitdir="$datadir/fits/$CONTAMID"
+
+    resdir="$fitdir/results"
+    mkdir -p "$resdir"
+    ln -Tfs ./results "$fitdir/$CONTAMID"
+
+    true && ./obs_info | tee $datadir/obs_info/$det.txt
+
+    true && parallel -j $nproc ./specextract ::: $obsids
+
+    parallel -j $nproc ./gainfit $tieNe9 ::: $obsids
+    gainfits_txt="$resdir/gainfits_${DET}.txt"
+    perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
+    ./plot_gainfits "$gainfits_txt"
+    psmerge_xspec gain
+
+    echo '.run shift_lines.pro' | gdl
+
+    # gdl never returns failure, so test that the output
+    # line_shifts.xcm files are newer than gainfit.xcm
+    for o in $obsids; do
+	obsid=$(printf %05d $((10#$o)))
+	line_shift_xcm="$fitdir/${obsid}/${obsid}_line_shifts.xcm"
+	gainfit_xcm="$fitdir/${obsid}/${obsid}_gainfit.xcm"
+	[ "$line_shift_xcm" -nt "$gainfit_xcm" ] || {
+	    echo "'${gainfit_xcm}' is newer than '${line_shift_xcm}'" 1>&2
+	    exit 1
+	}
+    done
+
+    parallel -j $nproc ./linefit $tieNe9 ::: $obsids
+    linefits_txt="$resdir/linefits_${DET}.txt"
+    perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
+    ./plot_linefits "$linefits_txt"
+    psmerge_xspec line
+
+    true && python3 ./plot_various.py
+
+    echo '.run data_shift.pro' | gdl
+
+    # gdl never returns failure, so test that the output
+    # evt2_energy_shift files are newer than linefit.xcm
+    for o in $obsids; do
+	obsid=$(printf %05d $((10#$o)))
+	evt2_energy_shift="$fitdir/${obsid}/${obsid}_evt2_energy_shift.fits"
+	linefit_xcm="$fitdir/${obsid}/${obsid}_linefit.xcm"
+	[ "$evt2_energy_shift" -nt "$linefit_xcm" ] || {
+	    echo "'${linefit_xcm}' is newer than '${evt2_energy_shift}'" 1>&2
+	    exit
+	}
+    done
+
+    psmerge_gdl spline_test
+    psmerge_gdl gain_corrections
+
+    energy_shift_plots
+
+    parallel -j $nproc ./shift_pi ::: $obsids
+
+    parallel -j $nproc ./shiftfit $tieNe9 ::: $obsids
+    shiftfits_txt="$resdir/shiftfits_${DET}.txt"
+    perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
+    ./plot_shiftfits "$shiftfits_txt"
+    psmerge_xspec shift
+
+    python3 \
+	./plot_fit_results.py norm \
+	-p "$resdir/params_${DET}_simul.pdf"
+
+    python3 \
+	./plot_fit_results.py norm \
+	-p "$resdir/params_${DET}.pdf" --no-simul
+
+done
