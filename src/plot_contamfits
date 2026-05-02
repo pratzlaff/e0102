@@ -1,0 +1,89 @@
+#! /bin/bash
+
+#
+# Adapted from
+#
+# /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/plot_shifted_fits.pl
+#
+
+set -eo pipefail
+
+[ $# -eq 1 ] || {
+    echo Usage: $0 contamfits_table
+    exit
+}
+
+f="$1"
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+chip=${DET^^}
+emin=0.35
+emax=1.6
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+heainit
+
+plot_contamfit() {
+    [ $# -eq 5 ] || {
+	echo "Usage: $0 obsid cstat dof redchi chi" 1>&2
+	return 1
+    }
+    local obsid=$(printf %05d $((10#"$1")))
+    local cstat="$2"
+    local dof="$3"
+    local redchi="$4"
+    local chi="$5"
+
+    local fitdir="$datadir/fits/$CONTAMID/$obsid"
+    local savefile="$fitdir/${obsid}_contamfit.save"
+    local plotfile="$fitdir/${obsid}_contamfit_plot.xcm"
+    local psfile="$fitdir/${obsid}_contamfit.ps"
+    local pdffile="$fitdir/${obsid}_contamfit.pdf"
+
+    local obsid_chipy=$obsid
+
+    simul=$(\grep ^$obsid "$srcdir/../data/simul/$DET" || :)
+    [ -n "$simul" ] && {
+	obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
+	obsid_chipy=$(echo $obsid | cut -d, -f1)
+    }
+
+    local chipy=$(obsid_chipy $obsid_chipy)
+    declare -A chipy_ci=(
+	[Low]=4
+	[Mid]=2
+	[High]=3
+    )
+
+    local date=$(obsid_date ${obsid%%,*})
+
+    cat - <<EOP >"$plotfile"
+lmod contelem_l ${contelem_l}
+@$savefile
+setplot energy
+setplot xlog off
+iplot data resid
+rescale x $emin $emax
+label otop $CONTAMID, Gain correction applied to the data
+label top $chip $obsid: Date=$date C-stat=$cstat dof=$dof Q-stat=$chi reduced Q-stat=$redchi
+label 2 vpos 0.25 0.8 color ${chipy_ci[$chipy]} csize 2 "$chipy ChipY"
+hardcopy $psfile/cps
+EOP
+    xspec < "$plotfile"
+    ps2pdf "$psfile" "$pdffile"
+}
+
+while IFS= read -r line; do
+    [[ "$line" =~ ^# ]] && continue
+    read -r obsid cstat dof redchi chi <<<$(perl -anle 'print join " ", @F[0, -4..-1]' <<< "$line")
+    plot_contamfit $obsid $cstat $dof $redchi $chi
+done < "$f"
