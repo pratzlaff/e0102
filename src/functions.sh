@@ -7,6 +7,18 @@ o8_cutoff=2023
 # python3 Ne_ratio.py /data/legs/rpete/data/e0102/fits/ciao4.18.0_caldb4.12.3/results/shiftfits_s3.txt
 Ne_ratio=0.9528
 
+# Best-fit values for line normalizations on S3, 2003-2010
+declare -A Params=(
+    [1]=1.068      # cons
+    [127]=1.267e-3 # O7
+    [118]=4.307e-3 # O8
+    [67]=1.336e-3  # Ne9
+    [61]=1.402e-3  # Ne10
+    [37]=0.120e-3  # Mg11
+)
+
+contelem_l=/data/legs/rpete/flight/acis_contam/xspec_model/mymodels
+
 obsids()
 {
     [ $# -eq 1 ] || {
@@ -104,8 +116,8 @@ psmerge_xspec()
     local type="$1"
     shift
 
-    [[ $type =~ ^(line|gain|shift)$ ]] || {
-	echo "Usage: $0 line|gain|shift" 1>&2
+    [[ $type =~ ^(line|gain|shift|contam)$ ]] || {
+	echo "Usage: $0 line|gain|shift|contam" 1>&2
 	return 1
     }
 

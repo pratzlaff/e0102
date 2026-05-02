@@ -29,7 +29,7 @@ if ($opts{debug}) {
 $opts{help} and _help();
 $opts{version} and _version();
 
-my %types = ( 'shift' => 1, line =>1, gain => 1 );
+my %types = ( 'shift' => 1, line =>1, gain => 1, contam => 1 );
 my $type = shift;
 if (not exists $types{$type}) {
   print STDERR "invalid type='$type', exiting\n";
@@ -45,13 +45,14 @@ if (not exists $ENV{CONTAMID}) {
 
 my $chip = uc($ENV{DET});
 my $model="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm";
+my $model_contam="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9_contamL.xcm";
 my $emin="0.35";
 my $emax="1.6";
 
 for my $obsid (@obsids) {
 
   get_results($obsid);
-  $type eq 'shift' || next;
+  $type =~ '^(shift|contam)$' || next;
 
   my @match = `grep --no-filename ",$obsid\$" "$opts{srcdir}/../data/simul/"[is]3`;
   @match and $obsid = +(split '=', $match[0])[0], get_results($obsid);
@@ -71,6 +72,7 @@ sub print_header {
 		gain => \&print_header_gainfit,
 		line => \&print_header_linefit,
 		shift => \&print_header_shiftfit,
+		contam => \&print_header_contamfit,
 	       );
   $print_subs{$type}->(@_);
 }
@@ -99,6 +101,14 @@ sub print_header_shiftfit {
   print "# lo and hi give 1-sigma confidence interval\n";
   print "#\n";
   print "#ObsID\tCons\tConsLo\tConsHi\tMg11\tMg11err\tMg11lo\tMg11hi\tNe10\tNe10err\tNe10lo\tNe10hi\tNe9\tNe9err\tNe9lo\tNe9hi\tO8\tO8err\tO8lo\tO8hi\tO7\tO7err\tO7lo\tO7hi\tCstat\tDof\tRedChi\tChi\n";
+}
+
+sub print_header_contamfit {
+  print "# contamination fit results for ${chip} with CONTAMID=$ENV{CONTAMID}\n";
+  print "# fitting between ${emin} - ${emax} keV\n";
+  print "# model: ${model_contam}\n";
+  print "#\n";
+  print "#ObsID\ttauL\ttauLerr\ttauLlo\ttauLhi\tOtoC\tOtoCerr\t\tOtoClo\tOtoChi\tFtoC\tFtoCerr\tFtoClo\tFtoChi\tCstat\tDof\tRedChi\tChi\n";
 }
 
 sub get_results {
@@ -130,6 +140,9 @@ sub get_results {
 		 O8en     => [116, 40, 'LineE'],
 		 O7norm   => [127, 43, 'norm'],
 		 O7en     => [119, 41, 'LineE'],
+		 tauL     => [209, 58, 'tauL'],
+		 OtoC     => [210, 58, 'OtoC'],
+		 FtoC     => [211, 58, 'FtoC'],
 		);
   my (%val, %err, %lo, %hi, %stat);
 
@@ -202,6 +215,7 @@ sub get_results {
 		   gain => \&print_fit_gainfit,
 		   line => \&print_fit_linefit,
 		   shift => \&print_fit_shiftfit,
+		   contam => \&print_fit_contamfit,
 		  );
 
   print_header($type, \%val);
@@ -289,6 +303,28 @@ sub print_fit_shiftfit {
   my @p = ($obs, $val->{Cons}, $lo->{Cons}, $hi->{Cons});
 
   for my $p (qw/ Mg11norm Ne10norm Ne9norm O8norm O7norm /) {
+    if (exists $val->{$p} and $err->{$p}>0) {
+      push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
+    }
+    else {
+      push(@p, 'nan', 'nan', 'nan', 'nan');
+    }
+    push @fmt, qw/ %8.3e %6.1e %8.3e %8.3e /;
+  }
+
+  push @p, @{$stat}{qw/ cstat dof redchi chi /};
+  push @fmt, qw/ %8.3f %3.0f %5.2f %6.1f /;
+
+  printf join("\t", @fmt)."\n", @p;
+}
+
+sub print_fit_contamfit {
+  my ($obs, $val, $err, $lo, $hi, $stat) = @_;
+
+  my @p = ($obs);
+  my @fmt = ('%5s');
+
+  for my $p (qw/ tauL OtoC FtoC /) {
     if (exists $val->{$p} and $err->{$p}>0) {
       push(@p, map { $_->{$p} } ($val, $err, $lo, $hi));
     }

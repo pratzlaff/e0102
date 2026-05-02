@@ -94,7 +94,6 @@ for obsid in $obsids; do
 	badpixfile="$bpix" \
 	weight=yes \
 	correct=no \
-	verbose=5 \
 	grouptype=NUM_CTS \
 	binspec=30 \
 	clobber=yes \

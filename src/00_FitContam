@@ -1,0 +1,44 @@
+#! /bin/bash
+
+set -eo pipefail
+
+. ./functions.sh
+
+. ~/python3_venv/bin/activate
+
+nproc=16
+
+export CONTAMID=$(./ciaostr)_contamfit
+
+for det in i3 s3; do
+    export DET=$det
+
+    datadir=$(./datadir)
+
+    obsids=$(obsids $det)
+
+    fitdir="$datadir/fits/$CONTAMID"
+
+    resdir="$fitdir/results"
+    mkdir -p "$resdir"
+    ln -Tfs ./results "$fitdir/$CONTAMID"
+
+    true && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
+
+    # FIXME: this fail sporadically
+    parallel -j $nproc ./contamfit ::: $obsids || :
+
+    contamfits_txt="$resdir/contamfits_${DET}.txt"
+    perl ./compile_fit_results.pl contam $obsids | tee "$contamfits_txt"
+    ./plot_contamfits "$contamfits_txt"
+    psmerge_xspec contam
+
+    python3 \
+	./plot_fit_results.py contam \
+	-p "$resdir/params_${DET}_simul.pdf"
+
+    python3 \
+	./plot_fit_results.py contam \
+	-p "$resdir/params_${DET}.pdf" --no-simul
+
+done

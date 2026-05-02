@@ -1,0 +1,195 @@
+#! /bin/bash
+
+#
+# Adapted from
+#
+# /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/fit_shifted_pi.pl
+#
+# Requires NoLine_v1.3.1_{line,coco}.fits in
+# $HEADAS/../spectral/modelData, which were obtained from
+# /data/paul11/plucinsk/chandra/data/e0102
+#
+
+set -eo pipefail
+
+TEMP=$(getopt -o 'h' --long 'help' -- "$@") || {
+	echo 'Terminating...' >&2
+	exit 1
+}
+eval set -- "$TEMP"
+unset TEMP
+
+while true; do
+    case "$1" in
+	'-h' | '--help')
+	    echo "Usage: $0 [-h|--help] [obsid1 obsid2 ...]" >&2
+	    exit
+	    ;;
+	'--')
+	    shift; break
+	    ;;
+	*)
+	    echo 'Internal error, terminating' >&2
+	    exit 1
+	    ;;
+    esac
+done
+
+[ -z "$CONTAMID" ] && {
+    echo "CONTAMID is not set, exiting" 1>&2
+    exit 1
+}
+
+[ -z "$DET" ] && {
+    echo "DET is not set, exiting" 1>&2
+    exit 1
+}
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -ge 1 ] && obsids="$@" || obsids=$(obsids $DET)
+
+emin=0.35
+emax=1.6
+
+. ~/.bash_aliases
+shopt -s expand_aliases
+
+ciao
+heainit
+. "$SCRIPTDIR/tmppdir.sh"
+
+model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9_contelem_L.xcm"
+
+simul_pi_files() {
+    local obsid="$1"
+    local match=$(\grep --no-filename ^"$obsid" "$SCRIPTDIR"/../data/simul/[is]3)
+    if [ -n "$match" ]; then
+	cut -d= -f2 <<<$match | perl -F, -anle 'print for @F'  |
+	    while read obs; do
+		echo -n "$datadir/fits/$CONTAMID/$obs/${obs}_energy_shift.pi "
+	    done
+	echo
+    fi
+}
+
+param_vals() {
+    for par in ${!Params[@]};
+    do
+	echo newpar $par ${Params[$par]} -1
+    done
+}
+
+get_energy_shift_pi() {
+    local obsid=$(printf %05d $((10#"$1")))
+    fitdir="$datadir/fits/$CONTAMID/$obsid"
+    cp $datadir/fits/$($SCRIPTDIR/ciaostr)/$obsid/${obsid}_{bkg_,}energy_shift.pi $fitdir
+
+    newpi="$fitdir/${obsid}_energy_shift.pi"
+    bkgpi="$fitdir/${obsid}_bkg_energy_shift.pi"
+
+    punlearn dmhedit
+    dmhedit \
+        infile="$bkgpi" \
+        filelist=none \
+        operation=add \
+        key=respfile \
+        value="'$fitdir/${obsid}_bkg.rmf'"
+    
+    punlearn dmhedit
+    dmhedit \
+        infile="$bkgpi" \
+        filelist=none \
+        operation=add \
+        key=ancrfile \
+        value="'$fitdir/${obsid}_bkg.arf'"
+    
+    punlearn dmhedit
+    dmhedit \
+        infile="$newpi" \
+        filelist=none \
+        operation=add \
+        key=respfile \
+        value="'$fitdir/${obsid}.rmf'"
+    
+    punlearn dmhedit
+    dmhedit \
+        infile="$newpi" \
+        filelist=none \
+        operation=add \
+        key=ancrfile \
+        value="'$fitdir/${obsid}.arf'"
+    
+    punlearn dmhedit
+    dmhedit \
+        infile="$newpi" \
+        filelist=none \
+        operation=add \
+        key=backfile \
+        value="'$bkgpi'"
+}
+
+fit_obsid() {
+    local obsid=$(printf %05d $((10#"$1")))
+    local fitdir="$datadir/fits/$CONTAMID/$obsid"
+
+    # for simul fit ObsIDs (e.g., 99999), the fit directory might not yet exist
+    mkdir -p "$fitdir"
+
+    local pi=$(simul_pi_files $obsid)
+    [ -z "$pi" ] && pi="$fitdir/${obsid}_energy_shift.pi"
+
+    local log_file="$fitdir/${obsid}_contamfit.log"
+    local save_file="$fitdir/${obsid}_contamfit.save"
+    local fit_file="$fitdir/${obsid}_contamfit.xcm"
+    local ps_file="$fitdir/${obsid}_contamfit.ps"
+    local pdf_file="$fitdir/${obsid}_contamfit.pdf"
+    rm -f "$save_file"
+
+    param_vals=$(param_vals)
+
+    cat - <<EOP >$fit_file
+log $log_file
+query yes
+data $pi
+ignore **:**-$emin
+ignore **:$emax-**
+lmod contelem_l ${contelem_l}
+@$model
+statistic cstat
+$param_vals
+thaw 209-211
+fit
+fit
+fit
+fit
+error max 4.0 1. 209
+error max 4.0 1. 210
+error max 4.0 1. 211
+setplot energy
+setplot xlog off
+cpd ${ps_file}/cps
+plot data resid
+cpd /null
+show free
+show fit
+statistic chi
+weight model
+save all $save_file
+EOP
+    xspec < "$fit_file"
+    ps2pdf "$ps_file" "$pdf_file"
+}
+
+\ln -Tfs "$contelem_l" ./mymodels
+
+for obsid in $obsids; do
+    get_energy_shift_pi $obsid
+    fit_obsid $obsid
+    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
+    [ -n "$match" ] && {
+	simul_obs=$(perl -F= -anle 'print $F[0]' <<<$match)
+	fit_obsid $simul_obs
+    } || :
+done

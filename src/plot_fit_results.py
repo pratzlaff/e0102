@@ -12,7 +12,11 @@ import sys
 srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
 shiftfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/shiftfits_{os.environ["DET"].lower()}.txt'
+contamfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/contamfits_{os.environ["DET"].lower()}.txt'
 obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
+
+read_func=None
+read_file=None
 
 iachec = {
     'cons':{'val':1, 'lo':0.9, 'hi':1.1},
@@ -71,18 +75,44 @@ def read_shiftfits(shiftfits):
 
     return obsid, data
 
+def read_contamfits(contamfits):
+    obsid, \
+    tauL, tauLlo, tauLhi, \
+    OtoC, OtoClo, OtoChi, \
+    FtoC, FtoClo, FtoChi, \
+    redchi \
+    = np.loadtxt(contamfits, unpack=True, usecols=[0,
+                                                  1,3,4,
+                                                  5,7,8,
+                                                  9,11,12,
+                                                  -2]
+                 )
+    data = {'tauL':{'val':tauL, 'lo':tauLlo, 'hi':tauLhi},
+            'OtoC':{'val':OtoC, 'lo':OtoClo, 'hi':OtoChi},
+            'FtoC':{'val':FtoC, 'lo':FtoClo, 'hi':FtoChi},
+            'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
+            }
+    return obsid, data
+
 def make_plots(args, date, data, chy, node):
 
     title = f'{os.environ["DET"].upper()} subarray {os.environ["CONTAMID"]}: '
     titles = { }
-    for key in data:
-        titles[key] = title + f'{key} normalization'
-    titles['cons'] = title + 'overall normalization'
+
+    if args.type == 'norm':
+        for key in data:
+            titles[key] = title + f'{key} normalization'
+            titles['cons'] = title + 'overall normalization'
+    elif args.type == 'contam':
+        titles = { k:k for k in data }
     titles['redchi'] = title + 'goodness of fit'
 
     ylabels = { }
-    for key in titles:
-        ylabels[key] = 'Best-fit normalization'
+    if args.type == 'norm':
+        for key in titles:
+            ylabels[key] = 'Best-fit normalization'
+    elif args.type == 'contam':
+        ylabels = { k:'' for k in data }
     ylabels['redchi'] = 'Reduced Q-stat'
 
     if args.pdf:
@@ -99,12 +129,13 @@ def make_plots(args, date, data, chy, node):
         ylo = data[key]['lo']
         yhi = data[key]['hi']
 
-        factor = data['cons']['val']
-        if key == 'redchi' or key == 'cons':
-            factor = np.ones(x.shape)
-
-        # for the case where parameter 1 is frozen
-        factor[np.isnan(factor)] = 1
+        factor = np.ones(x.shape)
+        if args.type == 'norm':
+            factor = data['cons']['val']
+            if key == 'redchi' or key == 'cons':
+                factor = np.ones(x.shape)
+            # for the case where parameter 1 is frozen
+            factor[np.isnan(factor)] = 1
 
         ii = x<2037
         x = x[ii]
@@ -134,22 +165,29 @@ def make_plots(args, date, data, chy, node):
                 y_ = y[ii][jj]
                 ylo_ = ylo[ii][jj]
                 yhi_ = yhi[ii][jj]
+                if key != 'redchi':
+                    kk = ((y_-ylo_)>0) & ((yhi_-y_)>0)
+                    x_ = x_[kk]
+                    y_ = y_[kk]
+                    ylo_ = ylo_[kk]
+                    yhi_ = yhi_[kk]
                 ax.errorbar(x_, y_, (y_-ylo_, yhi_-y_), fmt=symbols[i], color=colors[j])
 
         xlim = ax.get_xlim()
  
-        if key in iachec:
-            ax.plot(xlim, [iachec[key]['val']]*2, 'k-')
-            ax.plot(xlim, [iachec[key]['lo']]*2, 'k:')
-            ax.plot(xlim, [iachec[key]['hi']]*2, 'k:')
+        if args.type == 'norm':
+            if key in iachec:
+                ax.plot(xlim, [iachec[key]['val']]*2, 'k-')
+                ax.plot(xlim, [iachec[key]['lo']]*2, 'k:')
+                ax.plot(xlim, [iachec[key]['hi']]*2, 'k:')
 
-        if key == 'cons':
-            ax.plot(xlim, [cons_iachec_2016]*2, 'r-')
+            if key == 'cons':
+                ax.plot(xlim, [cons_iachec_2016]*2, 'r-')
 
         ylim = ax.get_ylim()
         ax.set_ylim(ax.get_ylim())
         ax.set_xlim(xlim)
-        if key == 'redchi' and os.environ["DET"] == 's3':
+        if key == 'redchi' and os.environ["DET"] == 's3' and args.type == 'norm':
             ax.set_ylim(1, 3)
 
        # from https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
@@ -165,17 +203,18 @@ def make_plots(args, date, data, chy, node):
         leg = Legend(ax, lines[3:], [f'Node {i}' for i in has_nodes], loc='upper left', frameon=False)
         ax.add_artist(leg)
 
-        if key in iachec:
-            line = ax.plot(0, 0, '-', color='k')
-            label = 'IACHEC value'
-            leg = Legend(ax, line, [label], loc='lower left', frameon=False)
-            ax.add_artist(leg)
+        if args.type == 'norm':
+            if key in iachec:
+                line = ax.plot(0, 0, '-', color='k')
+                label = 'IACHEC value'
+                leg = Legend(ax, line, [label], loc='lower left', frameon=False)
+                ax.add_artist(leg)
 
-        if key == 'cons':
-            line = ax.plot(0, 0, '-', color='r')
-            label = '2003-06 value'
-            leg = Legend(ax, line, [label], loc='lower right', frameon=False)
-            ax.add_artist(leg)
+            if key == 'cons':
+                line = ax.plot(0, 0, '-', color='r')
+                label = '2003-06 value'
+                leg = Legend(ax, line, [label], loc='lower right', frameon=False)
+                ax.add_artist(leg)
 
         ax.set_xlabel('Date')
         ax.set_ylabel(ylabels[key])
@@ -192,10 +231,10 @@ def make_plots(args, date, data, chy, node):
         pdf.close()
 
 def no_simul(args):
-    global srcdir, obsinfo, shiftfits
+    global srcdir, obsinfo, read_func, read_file
 
     obsid, date, chy, node = read_obsinfo(obsinfo)
-    obsid2, data = read_shiftfits(shiftfits)
+    obsid2, data = read_func(read_file)
     ii = obsid2<80000
     if np.sum(obsid!=obsid2[ii]):
         raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
@@ -213,10 +252,10 @@ def no_simul(args):
     return date, chy, node, data
 
 def simul(args):
-    global srcdir, obsinfo, shiftfits
+    global srcdir, obsinfo, read_func, read_file
 
     obsid, date, chy, node = read_obsinfo(obsinfo)
-    obsid2, data = read_shiftfits(shiftfits)
+    obsid2, data = read_func(read_file)
     ii = obsid2<80000
     if np.sum(obsid!=obsid2[ii]):
         raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
@@ -260,7 +299,12 @@ def main():
     )
     parser.add_argument('-p', '--pdf', help='Output PDF file.')
     parser.add_argument('--simul', default=True, action=argparse.BooleanOptionalAction, help='Plot simul fit results, rather than for individual ObsIDs.')
+    parser.add_argument('type', choices=('norm','contam'))
     args = parser.parse_args()
+
+    global read_func, read_file, shiftfits, contamfits
+    read_func = { 'norm':read_shiftfits, 'contam':read_contamfits }[args.type]
+    read_file = { 'norm':shiftfits, 'contam':contamfits }[args.type]
 
     plot_fit_results(args)
 
