@@ -66,8 +66,6 @@ plot_shiftfit() {
 
     local date=$(obsid_date ${obsid%%,*})
 
-    cd $fitdir
-
     cat - <<EOP >"$plotfile"
 @$savefile
 setplot energy
@@ -81,7 +79,6 @@ hardcopy $psfile/cps
 EOP
     xspec < "$plotfile"
     ps2pdf "$psfile" "$pdffile"
-    cd -
 }
 
 while IFS= read -r line; do
