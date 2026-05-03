@@ -57,8 +57,10 @@ emax=1.6
 shopt -s expand_aliases
 
 ciao
-heainit
 . "$SCRIPTDIR/tmppdir.sh"
+pfiles_old="$PFILES"
+heainit
+PFILES="$pfiles_old"
 
 model="$SCRIPTDIR/rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9_contelem_L.xcm"
 
@@ -79,6 +81,13 @@ param_vals() {
     do
 	echo newpar $par ${Params[$par]} -1
     done
+}
+
+obsid_date() {
+    local obsid="$1"
+    match=$(\grep --no-filename ^$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
+    [ -n "$match" ] && obsid=$(perl -F, -anle 'print $F[-1]' <<<$match)
+    \grep ^$obsid $datadir/obs_info/all.txt | perl -anle 'print $F[1]'
 }
 
 get_energy_shift_pi() {
@@ -147,6 +156,9 @@ fit_obsid() {
     local pdf_file="$fitdir/${obsid}_contamfit.pdf"
     rm -f "$save_file"
 
+    date=$(obsid_date $obsid)
+    tauL=$(perl -le "print( (9**(1/23))**($date-2003))")
+
     param_vals=$(param_vals)
 
     cat - <<EOP >$fit_file
@@ -160,6 +172,7 @@ lmod contelem_l ${contelem_l}
 statistic cstat
 $param_vals
 thaw 209-211
+newpar 209 $tauL
 fit
 fit
 fit
@@ -181,8 +194,6 @@ EOP
     xspec < "$fit_file"
     ps2pdf "$ps_file" "$pdf_file"
 }
-
-\ln -Tfs "$contelem_l" ./mymodels
 
 for obsid in $obsids; do
     get_energy_shift_pi $obsid

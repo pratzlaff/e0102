@@ -18,20 +18,15 @@ tieNe9='--tieNe9'
 
 export CONTAMID=$(./ciaostr)_test
 
+datadir=$(./datadir)
+fitdir="$datadir/fits/$CONTAMID"
+resdir="$fitdir/results"
+mkdir -p "$resdir"
+ln -Tfs ./results "$fitdir/$CONTAMID" 2>/dev/null
+
 for det in i3 s3; do
     export DET=$det
-
-    datadir=$(./datadir)
-
     obsids=$(obsids $det)
-
-    fitdir="$datadir/fits/$CONTAMID"
-
-    resdir="$fitdir/results"
-    mkdir -p "$resdir"
-    ln -Tfs ./results "$fitdir/$CONTAMID"
-
-    true && ./obs_info | tee $datadir/obs_info/$det.txt
 
     true && parallel -j $nproc ./specextract ::: $obsids
 

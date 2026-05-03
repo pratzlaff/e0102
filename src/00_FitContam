@@ -10,23 +10,23 @@ nproc=16
 
 export CONTAMID=$(./ciaostr)_contamfit
 
+datadir=$(./datadir)
+fitdir="$datadir/fits/$CONTAMID"
+resdir="$fitdir/results"
+mkdir -p "$resdir"
+\ln -Tfs ./results "$fitdir/$CONTAMID" 2>/dev/null
+
+# This cannot be done in contamfit due to resulting race condition
+# when multiple instances run in parallel.
+\ln -Tfs "$contelem_l" ./mymodels 2>/dev/null
+
 for det in i3 s3; do
     export DET=$det
-
-    datadir=$(./datadir)
-
     obsids=$(obsids $det)
-
-    fitdir="$datadir/fits/$CONTAMID"
-
-    resdir="$fitdir/results"
-    mkdir -p "$resdir"
-    ln -Tfs ./results "$fitdir/$CONTAMID"
 
     true && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
 
-    # FIXME: this fail sporadically
-    parallel -j $nproc ./contamfit ::: $obsids || :
+    parallel -j $nproc bash -x ./contamfit ::: $obsids
 
     contamfits_txt="$resdir/contamfits_${DET}.txt"
     perl ./compile_fit_results.pl contam $obsids | tee "$contamfits_txt"
