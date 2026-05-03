@@ -16,9 +16,9 @@ for obsid in $obsids; do
     obsid=$(printf %05d $((10#"$obsid")))
     reprodir="$datadir/$obsid/repro"
     evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
-    fp_temp=$(printf %.2f $(dmkeypar "$evt2" fp_temp ec+))
+    fp_temp=$(echo $(printf %.2f $(dmkeypar "$evt2" fp_temp ec+))-273.15 | bc)
     echo $fp_temp $obsid
-done | sort |
+done | sort -r |
     while read fp_temp obsid; do
 	echo -e "$obsid\t$fp_temp"
     done
