@@ -229,8 +229,6 @@ def make_plots(args, date, data, chy, node):
 
         if args.pdf:
             pdf.savefig(fig)
-        else:
-            plt.show()
 
     if args.pdf:
         pdf.close()
@@ -297,6 +295,8 @@ def simul(args):
 def plot_fit_results(args):
     date, chy, node, data = simul(args) if args.simul else no_simul(args)
     make_plots(args, date, data, chy, node)
+    if args.pdf is None:
+        plt.show()
 
 def main():
     parser = argparse.ArgumentParser(
