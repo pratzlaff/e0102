@@ -104,7 +104,8 @@ def make_plots(args, date, data, chy, node):
             titles[key] = title + f'{key} normalization'
             titles['cons'] = title + 'overall normalization'
     elif args.type == 'contam':
-        titles = { k:k for k in data }
+        for k in data:
+            titles[k] = title + k
     titles['redchi'] = title + 'goodness of fit'
 
     ylabels = { }
@@ -114,6 +115,9 @@ def make_plots(args, date, data, chy, node):
     elif args.type == 'contam':
         ylabels = { k:'' for k in data }
     ylabels['redchi'] = 'Reduced Q-stat'
+    ylabels['tauL'] = 'τ';
+    ylabels['OtoC'] = 'O/C';
+    ylabels['FtoC'] = 'F/C';
 
     if args.pdf:
         pdf = PdfPages(args.pdf)
