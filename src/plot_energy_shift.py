@@ -6,13 +6,19 @@ import os
 import numpy as np
 import sys
 
+srcdir=os.path.dirname(__file__)
+datadir=os.popen(srcdir+'/datadir').read()
+det=None
+
 def get_evtfile(args):
+    global datadir
     obsid = f'{args.obsid:05d}'
-    return get_datadir() + f'/{obsid}/repro/acisf{obsid}_repro_evt2.fits'
+    return f'{datadir}/{obsid}/repro/acisf{obsid}_repro_evt2.fits'
 
 def get_evtfile_shifted(args):
+    global datadir
     obsid = f'{args.obsid:05d}'
-    return get_datadir() + f'/fits/{os.environ["CONTAMID"]}/{obsid}/{obsid}_evt2_energy_shift.fits'
+    return f'{datadir}/fits/{os.environ["CONTAMID"]}/{obsid}/{obsid}_evt2_energy_shift.fits'
 
 def gainfit_energies(args):
     obsid, slope, offset = read_gainfits()
@@ -60,15 +66,13 @@ def read_gainfits():
 def read_linefits():
     return np.loadtxt(get_linefits(), unpack=True)
 
-def get_datadir():
-    srcdir=os.path.dirname(__file__)
-    return os.popen(srcdir+'/datadir').read()
-
 def get_gainfits():
-    return get_datadir() + f'/fits/{os.environ["CONTAMID"]}/results/gainfits_{os.environ["DET"].lower()}.txt'
+    global datadir, det
+    return f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gainfits_{det}.txt'
 
 def get_linefits():
-    return get_datadir() + f'/fits/{os.environ["CONTAMID"]}/results/linefits_{os.environ["DET"].lower()}.txt'
+    global datadir, det
+    return f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{det}.txt'
 
 def read_energy(evtfile):
     with astropy.io.fits.open(evtfile) as hdulist:
@@ -125,6 +129,9 @@ def main():
     parser.add_argument('--title', help='Plot title')
     parser.add_argument('obsid', type=int)
     args = parser.parse_args()
+
+    global srcdir, det
+    det=os.popen(srcdir+f'/detector {args.obsid}').read().strip()
 
     plot_energy_shift(args)
 

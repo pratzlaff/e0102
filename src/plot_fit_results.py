@@ -11,10 +11,10 @@ import sys
 
 srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
-shiftfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/shiftfits_{os.environ["DET"].lower()}.txt'
-contamfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/contamfits_{os.environ["DET"].lower()}.txt'
-obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
 
+shiftfits=None
+contamfits=None
+obsinfo=None
 read_func=None
 read_file=None
 
@@ -76,6 +76,7 @@ def read_shiftfits(shiftfits):
     return obsid, data
 
 def read_contamfits(contamfits):
+    print(contamfits)
     obsid, \
     tauL, tauLlo, tauLhi, \
     OtoC, OtoClo, OtoChi, \
@@ -96,7 +97,7 @@ def read_contamfits(contamfits):
 
 def make_plots(args, date, data, chy, node):
 
-    title = f'{os.environ["DET"].upper()} subarray {os.environ["CONTAMID"]}: '
+    title = f'{args.detector.upper()} subarray {os.environ["CONTAMID"]}: '
     titles = { }
 
     if args.type == 'norm':
@@ -191,7 +192,7 @@ def make_plots(args, date, data, chy, node):
         ylim = ax.get_ylim()
         ax.set_ylim(ax.get_ylim())
         ax.set_xlim(xlim)
-        if key == 'redchi' and os.environ["DET"] == 's3' and args.type == 'norm':
+        if key == 'redchi' and args.detector == 's3' and args.type == 'norm':
             ax.set_ylim(1, 3)
 
        # from https://jakevdp.github.io/PythonDataScienceHandbook/04.06-customizing-legends.html
@@ -267,7 +268,7 @@ def simul(args):
     obsid = [f'{int(o):05d}' for o in obsid]
     obsid2 = [f'{int(o):05d}' for o in obsid2]
 
-    simulf=f'{srcdir}/../data/simul/{os.environ["DET"]}'
+    simulf=f'{srcdir}/../data/simul/{args.detector}'
     with open(simulf) as cfile:
         for line in cfile:
 
@@ -304,9 +305,13 @@ def main():
     parser.add_argument('-p', '--pdf', help='Output PDF file.')
     parser.add_argument('--simul', default=True, action=argparse.BooleanOptionalAction, help='Plot simul fit results, rather than for individual ObsIDs.')
     parser.add_argument('type', choices=('norm','contam'))
+    parser.add_argument('detector', choices=('i3','s3'))
     args = parser.parse_args()
 
-    global read_func, read_file, shiftfits, contamfits
+    global read_func, read_file, shiftfits, contamfits, obsinfo
+    shiftfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/shiftfits_{args.detector}.txt'
+    contamfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/contamfits_{args.detector}.txt'
+    obsinfo=f'{datadir}/obs_info/{args.detector}.txt'
     read_func = { 'norm':read_shiftfits, 'contam':read_contamfits }[args.type]
     read_file = { 'norm':shiftfits, 'contam':contamfits }[args.type]
 

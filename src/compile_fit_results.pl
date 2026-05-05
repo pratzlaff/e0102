@@ -43,7 +43,7 @@ if (not exists $ENV{CONTAMID}) {
   exit 1;
 }
 
-my $chip = uc($ENV{DET});
+chomp(my $chip = uc(qx!$opts{srcdir}/detector $obsids[0]!));
 my $model="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9.xcm";
 my $model_contam="rgspn_mod_tbabs_tbvarabs_2apec_line_ratios_jd_v1.9_contamL.xcm";
 my $emin="0.35";

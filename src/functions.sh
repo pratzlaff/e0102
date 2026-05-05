@@ -22,7 +22,7 @@ contelem_l=/data/legs/rpete/flight/acis_contam/xspec_model/mymodels
 obsids()
 {
     [ $# -eq 1 ] || {
-	echo "Usage: $0 det" 1>&2
+	echo "Usage: $0 det" >&2
 	return 1
     }
     local det=${1,,}
@@ -60,28 +60,34 @@ obsid_year() {
     local obsid="$1"
 
     # if the ObsID is a simul fit, use the first obsid
-    obsid_simul=$(\grep -h "^$obsid=" "$srcdir/../data/simul/$DET"  | perl -F, -anle 'print $F[1]')
+    obsid_simul=$(\grep -h "^$obsid=" "$srcdir/../data/simul/"[is]3  | perl -F, -anle 'print $F[1]')
     [ -n "${obsid_simul}" ] && obsid=${obsid_simul}
     \grep -h "^${obsid}" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[1])'
 }
 
 energy_shift_plots()
 {
-    local obsids
-    [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 1>&2
-	return 1
-    }
-
     [ -z "$CONTAMID" ] && {
-	echo "CONTAMID must be set" 1>&2
+	echo "CONTAMID must be set" 2>&2
 	return 1
     }
 
+    [ $# -ge 1 ] || {
+	echo "Usage: $0 i3|s3 [obsids...]" >&2
+	return 1
+    }
+
+    local det="$1"; shift
+    [[ $det =~ ^(i3|s3)$ ]] || {
+	echo "Usage: $0 i3|s3 [obsids...]" >&2
+	return 1
+    }
+
+    local obsids
     [ $# -ge 1 ] && {
 	obsids="$@"
     } || {
-	obsids=$(obsids $DET)
+	obsids=$(obsids $det)
     }
 
     obsids_=
@@ -91,7 +97,7 @@ energy_shift_plots()
     obsids=$obsids_
     parallel -j 16 python3 $srcdir/plot_energy_shift.py -o $datadir/fits/$CONTAMID/{}/{}_energy_shift.pdf {} ::: $obsids
 
-    pdffile=$datadir/fits/$CONTAMID/results/energy_shift_${DET}.pdf
+    pdffile=$datadir/fits/$CONTAMID/results/energy_shift_${det}.pdf
     files=
     for obsid in $obsids; do
 	files+=" $datadir/fits/$CONTAMID/$obsid/${obsid}_energy_shift.pdf"
@@ -102,100 +108,80 @@ energy_shift_plots()
 
 psmerge_xspec()
 {
-    local obsids
-    [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 1>&2
-	return 1
-    }
-
     [ -z "$CONTAMID" ] && {
-	echo "CONTAMID must be set" 1>&2
+	echo "CONTAMID must be set" >&2
 	return 1
     }
 
-    [ $# -ge 1 ] || {
-	echo "Usage: $0 line|gain|shift" [obsid1 obsid2 ...] 1>&2
+    [ $# -ge 2 ] || {
+	echo "Usage: $0 line|gain|shift i3|s3 [obsids...]" >&2
 	return 1
     }
 
-    local type="$1"
-    shift
-
+    local type="$1"; shift
     [[ $type =~ ^(line|gain|shift|contam)$ ]] || {
-	echo "Usage: $0 line|gain|shift|contam" 1>&2
+	echo "Usage: $0 line|gain|shift i3|s3 [obsids...]" >&2
 	return 1
     }
 
+    local det="$1"; shift
+    [[ $det =~ ^(i3|s3)$ ]] || {
+	echo "Usage: $0 line|gain|shift i3|s3 [obsids...]" >&2
+	return 1
+    }
+
+    local obsids
     [ $# -ge 1 ] && {
 	obsids="$@"
     } || {
-	obsids=$(obsids $DET)
+	obsids=$(obsids $det)
     }
 
-    pdffile="$datadir/fits/$CONTAMID/results/${type}fits_${DET}.pdf"
+    pdffile="$datadir/fits/$CONTAMID/results/${type}fits_${det}.pdf"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}fit.ps"
 	[[ "$type" =~ shift|contam ]] && {
-	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$DET"  | perl -F= -anle 'print $F[0]')
+	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$det"  | perl -F= -anle 'print $F[0]')
 	    [ -n "$obsid_simul" ] && echo "$datadir/fits/$CONTAMID/${obsid_simul}/${obsid_simul}_${type}fit.ps"
 	} || :
     done | xargs cat | ps2pdf - "$pdffile"
 }
 
-psmerge_gain_corrections()
-{
-    [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 1>&2
-	return 1
-    }
-
-    [ -z "$CONTAMID" ] && {
-	echo "CONTAMID must be set" 1>&2
-	return 1
-    }
-
-    [ $# -ge 1 ] && {
-	obsids="$@"
-    } || {
-	obsids=$(obsids $DET)
-    }
-
-    pdffile="$datadir/fits/$CONTAMID/results/gain_corrections_${DET}.pdf"
-    for obsid in $obsids; do
-	obsid=$(printf %05d $((10#$obsid)))
-	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_gain_corrections.ps"
-    done | xargs cat | ps2pdf - - | pdftk - cat 1-endwest output "$pdffile"
-}
-
 psmerge_gdl()
 {
-    [[ "$DET" =~ ^[is]3$ ]] || {
-	echo "DET must be i3|s3" 1>&2
-	return 1
-    }
-
     [ -z "$CONTAMID" ] && {
 	echo "CONTAMID must be set" 1>&2
 	return 1
     }
 
-    local type="$1"
-    shift
-
-    [[ $type =~ ^(spline_test|gain_corrections)$ ]] || {
-	echo "Usage: $0 spline_test|gain_corrections" 1>&2
+    [ $# -ge 2 ] || {
+	echo "Usage: $0 spline_test|gain_corrections i3|s3 [obsids...]" >&2
 	return 1
     }
 
+    local type="$1"; shift
+    [[ $type =~ ^(spline_test|gain_corrections)$ ]] || {
+	echo "Usage: $0 spline_test|gain_corrections i3|s3 [obsids...]" >&2
+	return 1
+    }
+
+    local det="$1"; shift
+    [[ $det =~ ^(i3|s3)$ ]] || {
+	echo "Usage: $0 spline_test|gain_corrections i3|s3 [obsids...]" >&2
+	return 1
+    }
+
+    local obsids
     [ $# -ge 1 ] && {
 	obsids="$@"
     } || {
-	obsids=$(obsids $DET)
+	obsids=$(obsids $det)
     }
 
-    pdffile="$datadir/fits/$CONTAMID/results/${type}_gdl_${DET}.pdf"
+
+    pdffile="$datadir/fits/$CONTAMID/results/${type}_gdl_${det}.pdf"
     for obsid in $obsids; do
 	obsid=$(printf %05d $((10#$obsid)))
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}.ps"

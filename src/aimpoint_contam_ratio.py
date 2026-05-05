@@ -7,10 +7,9 @@ import os
 import re
 import sys
 
-srcdir=os.path.dirname(__file__)
-datadir=os.popen(srcdir+'/datadir').read()
-contamfits=f'{datadir}/fits/ciao4.18.0_caldb4.12.3_contamfit_all/results/contamfits_{os.environ["DET"].lower()}.txt'
-obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
+det=None
+contamfits=None
+obsinfo=None
 
 def read_obsinfo(obsinfo):
     obsid, date, chy, node = np.loadtxt(obsinfo, unpack=True, usecols=(0,1,3,4))
@@ -36,7 +35,7 @@ def read_contamfits(contamfits):
     return obsid, data
 
 def best_fit_contam_ratio(args):
-    global obsinfo
+    global obsinfo, det
     obsid, date, chy, node = read_obsinfo(obsinfo)
     obsid2, data = read_contamfits(contamfits)
 
@@ -45,7 +44,7 @@ def best_fit_contam_ratio(args):
     # aimpoint CHIPY regions
     ylim = { 's3':[341,341+341],
              'i3':[342*2, 1024]
-            }.get(os.environ["DET"].lower())
+            }.get(det)
 
     keys = { 'O/C':'OtoC',
              'F/C':'FtoC',
@@ -82,10 +81,16 @@ def main():
     parser = argparse.ArgumentParser(
         description='Given an obsid, find the best fit O/C or F/C at the aimpoint for that round of E0102 observations.'
     )
-    parser.add_argument('obsid', type=float)
+    parser.add_argument('obsid', type=int)
     parser.add_argument('ratio', choices=('O/C','F/C'))
     args = parser.parse_args()
 
+    global det, contamfits, obsinfo
+    srcdir=os.path.dirname(__file__)
+    datadir=os.popen(srcdir+'/datadir').read()
+    det=os.popen(srcdir+f'/detector {args.obsid}').read().strip()
+    contamfits=f'{datadir}/fits/ciao4.18.0_caldb4.12.3_contamfit_all/results/contamfits_{det}.txt'
+    obsinfo=f'{datadir}/obs_info/{det}.txt'
     best_fit_contam_ratio(args)
 
 if __name__ == '__main__':

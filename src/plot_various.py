@@ -10,9 +10,9 @@ import sys
 
 srcdir=os.path.dirname(__file__)
 datadir=os.popen(srcdir+'/datadir').read()
-gainfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gainfits_{os.environ["DET"].lower()}.txt'
-linefits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{os.environ["DET"].lower()}.txt'
-obsinfo=f'{datadir}/obs_info/{os.environ["DET"].lower()}.txt'
+gainfits=None
+linefits=None
+obsinfo=None
 
 def get_mtl_file(obsid):
     obsid = f'{int(obsid):05d}'
@@ -117,13 +117,13 @@ def plot_various(args):
     en = np.array([ en[l] for l in lines ])
 
     if args.obsids is None:
-        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{os.environ["DET"].lower()}.pdf'
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gain_corrections_{args.detector}.pdf'
         pdf_gc = PdfPages(pdffile)
 
-        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{os.environ["DET"].lower()}.pdf'
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/spline_test_{args.detector}.pdf'
         pdf_st = PdfPages(pdffile)
 
-        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/fp_temp_{os.environ["DET"].lower()}.pdf'
+        pdffile = f'{datadir}/fits/{os.environ["CONTAMID"]}/results/fp_temp_{args.detector}.pdf'
         pdf_fptemp = PdfPages(pdffile)
 
     obsids = obsids1.astype(int)
@@ -171,7 +171,13 @@ def plot_various(args):
 def main():
     parser = argparse.ArgumentParser(description='Plot gain corrections, splines, fp_temp.')
     parser.add_argument('--obsids', nargs='+', type=int)
+    parser.add_argument('detector', choices=('i3','s3'))
     args = parser.parse_args()
+
+    global datadir,gainfits, linefits, obsinfo
+    gainfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/gainfits_{args.detector}.txt'
+    linefits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/linefits_{args.detector}.txt'
+    obsinfo=f'{datadir}/obs_info/{args.detector}.txt'
 
     plot_various(args)
 

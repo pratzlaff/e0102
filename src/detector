@@ -1,0 +1,18 @@
+#! /bin/bash
+
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -eq 1 ] || {
+    echo "Usage: $0 obsid" >&2
+    exit 1
+}
+
+obsid=$(printf %05d $((10#"$1")))
+for d in i3 s3; do
+    \grep -q ^$obsid $datadir/obs_info/$d.txt && { echo $d; exit; }
+    \grep -q ^$obsid $srcdir/../data/simul/$d && { echo $d; exit; }
+done
+exit 1

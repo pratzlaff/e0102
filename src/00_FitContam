@@ -8,8 +8,8 @@ set -eo pipefail
 
 nproc=16
 
-aimratio=
-export CONTAMID=$(./ciaostr)_contamfit_all
+aimratio=--aimratio
+export CONTAMID=$(./ciaostr)_contamfit_some
 
 datadir=$(./datadir)
 fitdir="$datadir/fits/$CONTAMID"
@@ -22,24 +22,23 @@ mkdir -p "$resdir"
 \ln -Tfs "$contelem_l" ./mymodels 2>/dev/null
 
 for det in i3 s3; do
-    export DET=$det
     obsids=$(obsids $det)
 
     false && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
 
     parallel -j $nproc bash -x ./contamfit $aimratio ::: $obsids
 
-    contamfits_txt="$resdir/contamfits_${DET}.txt"
+    contamfits_txt="$resdir/contamfits_${det}.txt"
     perl ./compile_fit_results.pl contam $obsids | tee "$contamfits_txt"
     ./plot_contamfits "$contamfits_txt"
-    psmerge_xspec contam
+    psmerge_xspec contam $det
 
     python3 \
-	./plot_fit_results.py contam \
-	-p "$resdir/params_${DET}_simul.pdf"
+	./plot_fit_results.py contam $det \
+	-p "$resdir/params_${det}_simul.pdf"
 
     python3 \
-	./plot_fit_results.py contam \
-	-p "$resdir/params_${DET}.pdf" --no-simul
+	./plot_fit_results.py contam $det \
+	-p "$resdir/params_${det}.pdf" --no-simul
 
 done

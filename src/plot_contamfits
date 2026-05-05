@@ -9,18 +9,17 @@
 set -eo pipefail
 
 [ $# -eq 1 ] || {
-    echo Usage: $0 contamfits_table
-    exit
+    echo "Usage: $0 contamfits_table" >&2
+    exit 1
 }
 
 f="$1"
 
 [ -z "$CONTAMID" ] && {
-    echo "CONTAMID is not set, exiting" 1>&2
+    echo "CONTAMID is not set, exiting" >&2
     exit 1
 }
 
-chip=${DET^^}
 emin=0.35
 emax=1.6
 
@@ -51,7 +50,7 @@ plot_contamfit() {
 
     local obsid_chipy=$obsid
 
-    simul=$(\grep ^$obsid "$srcdir/../data/simul/$DET" || :)
+    simul=$(\grep ^$obsid "$srcdir/../data/simul/"[is]3 || :)
     [ -n "$simul" ] && {
 	obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
 	obsid_chipy=$(echo $obsid | cut -d, -f1)
@@ -65,6 +64,9 @@ plot_contamfit() {
     )
 
     local date=$(obsid_date ${obsid%%,*})
+
+    det=$($SCRIPTDIR/detector $obsid)
+    chip=${det^^}
 
     cat - <<EOP >"$plotfile"
 lmod contelem_l ${contelem_l}

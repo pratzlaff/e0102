@@ -20,7 +20,6 @@ f="$1"
     exit 1
 }
 
-chip=${DET^^}
 emin=0.35
 emax=1.6
 
@@ -50,6 +49,9 @@ plot_linefit() {
     local pdffile="$fitdir/${obsid}_linefit.pdf"
 
     local date=$(obsid_date $obsid)
+
+    det=$($SCRIPTDIR/detector $obsid)
+    chip=${det^^}
 
     cat - <<EOP >"$plotfile"
 @$savefile

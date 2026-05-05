@@ -25,18 +25,17 @@ mkdir -p "$resdir"
 ln -Tfs ./results "$fitdir/$CONTAMID" 2>/dev/null
 
 for det in i3 s3; do
-    export DET=$det
     obsids=$(obsids $det)
 
-    true && parallel -j $nproc ./specextract ::: $obsids
+    false && parallel -j $nproc ./specextract ::: $obsids
 
     parallel -j $nproc ./gainfit $tieNe9 ::: $obsids
-    gainfits_txt="$resdir/gainfits_${DET}.txt"
+    gainfits_txt="$resdir/gainfits_${det}.txt"
     perl ./compile_fit_results.pl gain $obsids | tee "$gainfits_txt"
     ./plot_gainfits "$gainfits_txt"
-    psmerge_xspec gain
+    psmerge_xspec gain $det
 
-    echo '.run shift_lines.pro' | gdl
+    echo '.run shift_lines.pro' | env DET=$det gdl
 
     # gdl never returns failure, so test that the output
     # line_shifts.xcm files are newer than gainfit.xcm
@@ -51,14 +50,14 @@ for det in i3 s3; do
     done
 
     parallel -j $nproc ./linefit $tieNe9 ::: $obsids
-    linefits_txt="$resdir/linefits_${DET}.txt"
+    linefits_txt="$resdir/linefits_${det}.txt"
     perl ./compile_fit_results.pl line $obsids | tee "$linefits_txt"
     ./plot_linefits "$linefits_txt"
-    psmerge_xspec line
+    psmerge_xspec line $det
 
-    true && python3 ./plot_various.py
+    true && python3 ./plot_various.py $det
 
-    echo '.run data_shift.pro' | gdl
+    echo '.run data_shift.pro' | env DET=$det gdl
 
     # gdl never returns failure, so test that the output
     # evt2_energy_shift files are newer than linefit.xcm
@@ -72,25 +71,25 @@ for det in i3 s3; do
 	}
     done
 
-    psmerge_gdl spline_test
-    psmerge_gdl gain_corrections
+    psmerge_gdl spline_test $det
+    psmerge_gdl gain_corrections $det
 
-    energy_shift_plots
+    energy_shift_plots $det
 
     parallel -j $nproc ./shift_pi ::: $obsids
 
     parallel -j $nproc ./shiftfit $tieNe9 ::: $obsids
-    shiftfits_txt="$resdir/shiftfits_${DET}.txt"
+    shiftfits_txt="$resdir/shiftfits_${det}.txt"
     perl ./compile_fit_results.pl shift $obsids | tee "$shiftfits_txt"
     ./plot_shiftfits "$shiftfits_txt"
-    psmerge_xspec shift
+    psmerge_xspec shift $det
 
     python3 \
-	./plot_fit_results.py norm \
-	-p "$resdir/params_${DET}_simul.pdf"
+	./plot_fit_results.py norm $det \
+	-p "$resdir/params_${det}_simul.pdf"
 
     python3 \
-	./plot_fit_results.py norm \
-	-p "$resdir/params_${DET}.pdf" --no-simul
+	./plot_fit_results.py norm $det \
+	-p "$resdir/params_${det}.pdf" --no-simul
 
 done

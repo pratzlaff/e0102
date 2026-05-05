@@ -44,11 +44,6 @@ done
     exit 1
 }
 
-[ -z "$DET" ] && {
-    echo "DET is not set, exiting" 1>&2
-    exit 1
-}
-
 SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 . "$SCRIPTDIR/functions.sh"
 
@@ -168,8 +163,9 @@ fit_obsid() {
     aim=no
     chipy=$(obsid_chipy $obsid)
     ratio_vals=
-    [ "$DET" = i3 -a "$chipy" = High ] && aim=yes
-    [ "$DET" = s3 -a "$chipy" = Mid ] && aim=yes
+    det=$($SCRIPTDIR/detector $obsid)
+    [ "$det" = i3 -a "$chipy" = High ] && aim=yes
+    [ "$det" = s3 -a "$chipy" = Mid ] && aim=yes
     if [ "$aimratio" = yes -a "$aim" = no ]; then
 	OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C)
 	FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C)
