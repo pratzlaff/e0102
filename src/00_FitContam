@@ -8,7 +8,8 @@ set -eo pipefail
 
 nproc=16
 
-export CONTAMID=$(./ciaostr)_contamfit
+aimratio=
+export CONTAMID=$(./ciaostr)_contamfit_all
 
 datadir=$(./datadir)
 fitdir="$datadir/fits/$CONTAMID"
@@ -24,9 +25,9 @@ for det in i3 s3; do
     export DET=$det
     obsids=$(obsids $det)
 
-    true && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
+    false && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
 
-    parallel -j $nproc bash -x ./contamfit ::: $obsids
+    parallel -j $nproc bash -x ./contamfit $aimratio ::: $obsids
 
     contamfits_txt="$resdir/contamfits_${DET}.txt"
     perl ./compile_fit_results.pl contam $obsids | tee "$contamfits_txt"

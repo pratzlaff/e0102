@@ -39,7 +39,12 @@ obsid_date()
 }
 
 obsid_chipy() {
-    local obsid="$1"
+    local obsid=$(printf %05d $((10#"$1")))
+    simul=$(\grep ^$obsid "$srcdir/../data/simul/"* || :)
+    [ -n "$simul" ] && {
+	obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
+	obsid=$(echo $obsid | cut -d, -f1)
+    }
     chipy=$(\grep -h "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[3])')
     [ -z "$chipy" ] && {
 	echo "Could not find ObsID $obsid in '$datadir'/obs_info/[is]3.txt" >&2
@@ -132,7 +137,7 @@ psmerge_xspec()
 	obsid=$(printf %05d $((10#$obsid)))
 
 	echo "$datadir/fits/$CONTAMID/$obsid/${obsid}_${type}fit.ps"
-	[ "$type" = shift ] && {
+	[[ "$type" =~ shift|contam ]] && {
 	    obsid_simul=$(\grep -h ",$obsid$" "$srcdir/../data/simul/$DET"  | perl -F= -anle 'print $F[0]')
 	    [ -n "$obsid_simul" ] && echo "$datadir/fits/$CONTAMID/${obsid_simul}/${obsid_simul}_${type}fit.ps"
 	} || :

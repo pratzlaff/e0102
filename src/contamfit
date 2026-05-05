@@ -12,18 +12,22 @@
 
 set -eo pipefail
 
-TEMP=$(getopt -o 'h' --long 'help' -- "$@") || {
+TEMP=$(getopt -o 'h' --long 'help,aimratio' -- "$@") || {
 	echo 'Terminating...' >&2
 	exit 1
 }
 eval set -- "$TEMP"
 unset TEMP
 
+aimratio=no
 while true; do
     case "$1" in
 	'-h' | '--help')
-	    echo "Usage: $0 [-h|--help] [obsid1 obsid2 ...]" >&2
+	    echo "Usage: $0 [-h|--help] [--aimratio] [obsid1 obsid2 ...]" >&2
 	    exit
+	    ;;
+	'--aimratio')
+	    aimratio=yes; shift; continue
 	    ;;
 	'--')
 	    shift; break
@@ -161,6 +165,17 @@ fit_obsid() {
 
     param_vals=$(param_vals)
 
+    aim=no
+    chipy=$(obsid_chipy $obsid)
+    ratio_vals=
+    [ "$DET" = i3 -a "$chipy" = High ] && aim=yes
+    [ "$DET" = s3 -a "$chipy" = Mid ] && aim=yes
+    if [ "$aimratio" = yes -a "$aim" = no ]; then
+	OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C)
+	FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C)
+	[ -n "$OtoC" ] && ratio_vals=$(echo -e "newpar 210 $OtoC -1\nnewpar 211 $FtoC -1")
+    fi
+
     cat - <<EOP >$fit_file
 log $log_file
 query yes
@@ -173,6 +188,7 @@ statistic cstat
 $param_vals
 thaw 209-211
 newpar 209 $tauL
+$ratio_vals
 fit
 fit
 fit
