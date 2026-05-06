@@ -1,43 +1,33 @@
 import argparse
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 import numpy as np
-from numpy.random import rand
 import os
-import re
 import sys
 
-det=None
-contamfits=None
-obsinfo=None
-
-def read_obsinfo(obsinfo):
-    obsid, date, chy, node = np.loadtxt(obsinfo, unpack=True, usecols=(0,1,3,4))
-    return obsid, date, chy, node
-
-def read_contamfits(contamfits):
-    obsid, \
-    tauL, tauLlo, tauLhi, \
-    OtoC, OtoClo, OtoChi, \
-    FtoC, FtoClo, FtoChi, \
-    redchi \
-    = np.loadtxt(contamfits, unpack=True, usecols=[0,
-                                                  1,3,4,
-                                                  5,7,8,
-                                                  9,11,12,
-                                                  -2]
-                 )
-    data = {'tauL':{'val':tauL, 'lo':tauLlo, 'hi':tauLhi},
-            'OtoC':{'val':OtoC, 'lo':OtoClo, 'hi':OtoChi},
-            'FtoC':{'val':FtoC, 'lo':FtoClo, 'hi':FtoChi},
-            'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
-            }
-    return obsid, data
+from E0102 import obsinfo_file, read_obsinfo
+from E0102 import contamfits_file, read_contamfits
+from E0102 import chipy_region, detector
 
 def best_fit_contam_ratio(args):
-    global obsinfo, det
-    obsid, date, chy, node = read_obsinfo(obsinfo)
-    obsid2, data = read_contamfits(contamfits)
+
+    det = detector(args.obsid)
+
+    aimreg = { 'i3':'High',
+               's3':'Mid',
+              }
+    if (chipy_region(args.obsid) == aimreg[det]):
+        sys.exit(0)
+
+    obsid, date, chy, node = read_obsinfo(obsinfo_file(det))
+
+    old = None
+    try:
+        old = os.environ['CONTAMID']
+    except:
+        pass
+    os.environ['CONTAMID'] = 'ciao4.18.0_caldb4.12.3_contamfit_all'
+    obsid2, data = read_contamfits(contamfits_file(det))
+    if old is not None:
+        os.environ['CONTAMID'] = old
 
     date_dict = { d:o for d,o in zip(obsid, date) }
 
@@ -52,16 +42,42 @@ def best_fit_contam_ratio(args):
     ratio = data[keys[args.ratio]]['val']
 
     # special cases of simultaneous fits
-    simul = { 89999. : 26987.,
-              89998. : 26987.,
-              99999. : 25617.,
-              99998. : 25617.,
-              99995. : 99997.,
-              99996. : 99997.,
-              99997. : 99997.,
+    simul = {
+              # 2022 split observations, S3
+              26988 : 26987,
+              27760 : 26987,
+              89999 : 26987,
+
+              26989 : 26987,
+              27761 : 26987,
+              89998 : 26987,
+
+
+              # 2022 split observations, I3
+              25622 : 25617,
+              26359 : 25617,
+              99999 : 25617,
+
+              25621 : 25617,
+              26358 : 25617,
+              99998 : 25617,
+
+              # 2023 split observations, I3
+              26986 : 99997,
+              27745 : 99997,
+              99997 : 99997,
+
+              26990 : 99997,
+              27762 : 99997,
+              99996 : 99997,
+
+              26991 : 99997,
+              27773 : 99997,
+              99995 : 99997,
              }
     if args.obsid in simul:
         ii, = np.where(obsid2==simul[args.obsid])
+        sys.stderr.write(f'{args.obsid} (simul): using {obsid2[ii[0]]} value\n')
         print(ratio[ii[0]])
         sys.exit(0)
 
@@ -70,12 +86,15 @@ def best_fit_contam_ratio(args):
         (date.astype(int) == int(date_dict[args.obsid])) &
         (chy>=ylim[0]) & (chy<=ylim[1])
     )
+    sys.stderr.write(f'{args.obsid}: found {ii.size} match\n')
     if ii.size:
         sum = 0
         for o in obsid[ii]:
             jj, = np.where(obsid2 == o)
+            assert(jj.size==1)
             sum += ratio[jj[0]]
         print(sum/ii.size)
+        sys.exit(0)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -85,12 +104,6 @@ def main():
     parser.add_argument('ratio', choices=('O/C','F/C'))
     args = parser.parse_args()
 
-    global det, contamfits, obsinfo
-    srcdir=os.path.dirname(__file__)
-    datadir=os.popen(srcdir+'/datadir').read()
-    det=os.popen(srcdir+f'/detector {args.obsid}').read().strip()
-    contamfits=f'{datadir}/fits/ciao4.18.0_caldb4.12.3_contamfit_all/results/contamfits_{det}.txt'
-    obsinfo=f'{datadir}/obs_info/{det}.txt'
     best_fit_contam_ratio(args)
 
 if __name__ == '__main__':

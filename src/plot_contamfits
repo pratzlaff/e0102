@@ -56,7 +56,7 @@ plot_contamfit() {
 	obsid_chipy=$(echo $obsid | cut -d, -f1)
     }
 
-    local chipy=$(obsid_chipy $obsid_chipy)
+    local chipy=$(chipy_region $obsid_chipy)
     declare -A chipy_ci=(
 	[Low]=4
 	[Mid]=2

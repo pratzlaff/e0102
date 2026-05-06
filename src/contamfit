@@ -161,7 +161,7 @@ fit_obsid() {
     param_vals=$(param_vals)
 
     aim=no
-    chipy=$(obsid_chipy $obsid)
+    chipy=$(chipy_region $obsid)
     ratio_vals=
     det=$($SCRIPTDIR/detector $obsid)
     [ "$det" = i3 -a "$chipy" = High ] && aim=yes

@@ -38,7 +38,7 @@ obsid_date()
     done
 }
 
-obsid_chipy() {
+chipy_region() {
     local obsid=$(printf %05d $((10#"$1")))
     simul=$(\grep ^$obsid "$srcdir/../data/simul/"* || :)
     [ -n "$simul" ] && {

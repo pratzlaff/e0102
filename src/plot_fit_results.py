@@ -9,12 +9,11 @@ import os
 import re
 import sys
 
-srcdir=os.path.dirname(__file__)
-datadir=os.popen(srcdir+'/datadir').read()
+from E0102 import shiftfits_file, read_shiftfits
+from E0102 import contamfits_file, read_contamfits
+from E0102 import obsinfo_file, read_obsinfo
+from E0102 import read_simul
 
-shiftfits=None
-contamfits=None
-obsinfo=None
 read_func=None
 read_file=None
 
@@ -30,70 +29,6 @@ for key in iachec:
     for limit in 'lo', 'hi':
         iachec[key][limit] = iachec[key]['val'] * iachec['cons'][limit]
 cons_iachec_2016 = 1.072
-
-def read_obsinfo(obsinfo):
-    obsid, date, chy, node = np.loadtxt(obsinfo, unpack=True, usecols=(0,1,3,4))
-    return obsid, date, chy, node
-
-def grep_header(expr, shiftfits):
-    with open(shiftfits, 'r') as fh:
-        for line in fh:
-            if not re.match('^#', line):
-                return False
-            if re.search(expr, line):
-                return True
-
-def read_shiftfits(shiftfits):
-    obsid, \
-    cons, conslo, conshi, \
-    mg11, mg11lo, mg11hi, \
-    ne10, ne10lo, ne10hi, \
-    ne9, ne9lo, ne9hi, \
-    o8, o8lo, o8hi, \
-    o7, o7lo, o7hi, \
-    redchi \
-    = np.loadtxt(shiftfits, unpack=True, usecols=[0,
-                                                  1,2,3,
-                                                  4,6,7,
-                                                  8,10,11,
-                                                  12,14,15,
-                                                  16,18,19,
-                                                  20,22,23,
-                                                  -2]
-                 )
-    data = {'cons':{'val':cons, 'lo':conslo, 'hi':conshi},
-            'O7':{'val':o7, 'lo':o7lo, 'hi':o7hi},
-            'O8':{'val':o8, 'lo':o8lo, 'hi':o8hi},
-            'Ne9':{'val':ne9, 'lo':ne9lo, 'hi':ne9hi},
-            'Ne10':{'val':ne10, 'lo':ne10lo, 'hi':ne10hi},
-            'Mg11':{'val':mg11, 'lo':mg11lo, 'hi':mg11hi},
-            'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
-            }
-
-    if not grep_header('Mg', shiftfits):
-        del data['Mg']
-
-    return obsid, data
-
-def read_contamfits(contamfits):
-    print(contamfits)
-    obsid, \
-    tauL, tauLlo, tauLhi, \
-    OtoC, OtoClo, OtoChi, \
-    FtoC, FtoClo, FtoChi, \
-    redchi \
-    = np.loadtxt(contamfits, unpack=True, usecols=[0,
-                                                  1,3,4,
-                                                  5,7,8,
-                                                  9,11,12,
-                                                  -2]
-                 )
-    data = {'tauL':{'val':tauL, 'lo':tauLlo, 'hi':tauLhi},
-            'OtoC':{'val':OtoC, 'lo':OtoClo, 'hi':OtoChi},
-            'FtoC':{'val':FtoC, 'lo':FtoClo, 'hi':FtoChi},
-            'redchi':{'val':redchi, 'lo':redchi, 'hi':redchi},
-            }
-    return obsid, data
 
 def make_plots(args, date, data, chy, node):
 
@@ -234,13 +169,14 @@ def make_plots(args, date, data, chy, node):
         pdf.close()
 
 def no_simul(args):
-    global srcdir, obsinfo, read_func, read_file
+    global read_func, read_file
 
+    obsinfo = obsinfo_file(args.detector)
     obsid, date, chy, node = read_obsinfo(obsinfo)
     obsid2, data = read_func(read_file)
     ii = obsid2<80000
     if np.sum(obsid!=obsid2[ii]):
-        raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
+        raise RuntimeError(f"obsids don't match in '{obsinfo} and '{read_file}'")
 
     to_delete = []
     for i, o in enumerate(obsid2):
@@ -255,40 +191,37 @@ def no_simul(args):
     return date, chy, node, data
 
 def simul(args):
-    global srcdir, obsinfo, read_func, read_file
+    global read_func, read_file
 
+    obsinfo = obsinfo_file(args.detector)
     obsid, date, chy, node = read_obsinfo(obsinfo)
     obsid2, data = read_func(read_file)
     ii = obsid2<80000
     if np.sum(obsid!=obsid2[ii]):
-        raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{shiftfits}'")
+        raise RuntimeError(f"obsids don't match in '{obsinfo}' and '{read_file}'")
 
     obsid = [f'{int(o):05d}' for o in obsid]
     obsid2 = [f'{int(o):05d}' for o in obsid2]
 
-    simulf=f'{srcdir}/../data/simul/{args.detector}'
-    with open(simulf) as cfile:
-        for line in cfile:
+    s = read_simul(args.detector)
+    s = { f'{o:05d}' : [f'{o:05d}' for o in s[o] ] for o in s }
+    for simuled in s:
+        to_simul = s[simuled]
+        for o in to_simul[:-1]:
+            index = obsid.index(o)
+            obsid.pop(index)
+            date = np.delete(date, index)
+            chy = np.delete(chy, index)
+            node = np.delete(node, index)
+        obsid[obsid.index(to_simul[-1])] = simuled
 
-            # first deal with obs_info data
-            match = re.search(r'^(\d{5})=(.*)$', line)
-            simuled = match.group(1)
-            to_simul = match.group(2).split(',')
-            for o in to_simul[:-1]:
-                index = obsid.index(o)
-                obsid.pop(index)
-                date = np.delete(date, index)
-                chy = np.delete(chy, index)
-                node = np.delete(node, index)
-            obsid[obsid.index(to_simul[-1])] = simuled
-
-            # then shiftfits
-            for o in to_simul:
-                index = obsid2.index(o)
-                obsid2.pop(index)
-                for key1 in data:
-                    for key2 in data[key1]:
-                        data[key1][key2] = np.delete(data[key1][key2], index)
+        # then shiftfits
+        for o in to_simul:
+            index = obsid2.index(o)
+            obsid2.pop(index)
+            for key1 in data:
+                for key2 in data[key1]:
+                    data[key1][key2] = np.delete(data[key1][key2], index)
 
     return date, chy, node, data
 
@@ -308,12 +241,9 @@ def main():
     parser.add_argument('detector', choices=('i3','s3'))
     args = parser.parse_args()
 
-    global read_func, read_file, shiftfits, contamfits, obsinfo
-    shiftfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/shiftfits_{args.detector}.txt'
-    contamfits=f'{datadir}/fits/{os.environ["CONTAMID"]}/results/contamfits_{args.detector}.txt'
-    obsinfo=f'{datadir}/obs_info/{args.detector}.txt'
+    global read_func, read_file
     read_func = { 'norm':read_shiftfits, 'contam':read_contamfits }[args.type]
-    read_file = { 'norm':shiftfits, 'contam':contamfits }[args.type]
+    read_file = { 'norm':shiftfits_file(args.detector), 'contam':contamfits_file(args.detector) }[args.type]
 
     plot_fit_results(args)
 

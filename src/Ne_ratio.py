@@ -2,22 +2,14 @@ import argparse
 import numpy as np
 import os
 
-def get_datadir():
-    srcdir=os.path.dirname(__file__)
-    return os.popen(srcdir+'/datadir').read()
-
-def read_obsinfo():
-    obsid, date = np.loadtxt(get_datadir() + '/obs_info/all.txt', unpack=True, usecols=(0,1))
-    return obsid, date
-
-def read_shiftfits(shiftfits):
-    obsid, ne10, ne10lo, ne10hi, ne9, ne9lo, ne9hi = np.loadtxt(shiftfits, unpack=True, usecols=(0,8,10,11,12,14,15))
-    return obsid, ne9, ne10
+from E0102 import obsinfo_file, read_obsinfo
+from E0102 import read_shiftfits
 
 def Ne_ratio(args):
-
-    obsid1, ne9, ne10 = read_shiftfits(args.shiftfits)
-    obsid2, date = read_obsinfo()
+    obsid1, data = read_shiftfits(args.shiftfits)
+    ne9 = data['Ne9']['val']
+    ne10 = data['Ne10']['val']
+    obsid2, date, _, _ = read_obsinfo(obsinfo_file('all'))
     dates = { obsid2[i]:date[i] for i in range(len(date)) }
     ii = np.array([i for i in range(len(obsid1)) if dates.get(obsid1[i], 3000) < 2011])
 
