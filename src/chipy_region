@@ -1,0 +1,27 @@
+#! /bin/bash
+
+set -eo pipefail
+
+SCRIPTDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "$SCRIPTDIR/functions.sh"
+
+[ $# -eq 1 ] || {
+    echo "Usage: $0 obsid" >&2
+    exit 1
+}
+
+obsid=$(printf %05d $((10#"$1")))
+simul=$(\grep ^$obsid "$srcdir/../data/simul/"* || :)
+[ -n "$simul" ] && {
+    obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
+    obsid=$(echo $obsid | cut -d, -f1)
+}
+chipy=$(\grep -h "^$obsid" "$datadir"/obs_info/[is]3.txt | perl -anle 'print int($F[3])')
+[ -z "$chipy" ] && {
+    echo "Could not find ObsID $obsid in '$datadir'/obs_info/[is]3.txt" >&2
+    exit 1
+}
+str=High
+[ $chipy -lt 682 ] && str=Mid
+[ $chipy -lt 341 ] && str=Low
+echo $str
