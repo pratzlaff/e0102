@@ -20,8 +20,9 @@ for obsid in $obsids; do
     evt2="$reprodir/acisf${obsid}_repro_evt2.fits"
     evt2_120c="${evt2/evt2.fits/evt2-120C.fits}"
 
-    cp -a "$evt2" "$evt2_120c"
-
-    dmhedit "$evt2_120c" none add fp_temp 153
+    [ ! -f "$evt2_120c" -o "$evt2" -nt "$evt2_120c" ] && {
+	cp -a "$evt2" "$evt2_120c"
+	dmhedit "$evt2_120c" none add fp_temp 153
+    }
 done
 
