@@ -15,8 +15,12 @@ nproc=16
 #export CONTAMFILE=/data/legs/rpete/flight/e0102/data/contam/acisD1999-08-13contam${contam}.fits
 
 tieNe9='--tieNe9'
+resp120C='--120C'
 
-export CONTAMID=$(./ciaostr)_test
+tieNe9=
+resp120C=
+
+export CONTAMID=$(./ciaostr)
 
 datadir=$(./datadir)
 fitdir="$datadir/fits/$CONTAMID"
@@ -27,7 +31,7 @@ ln -Tfs ./results "$fitdir/$CONTAMID" 2>/dev/null
 for det in i3 s3; do
     obsids=$(obsids $det)
 
-    false && parallel -j $nproc ./specextract ::: $obsids
+    true && parallel -j $nproc ./specextract $resp120C ::: $obsids
 
     parallel -j $nproc ./gainfit $tieNe9 ::: $obsids
     gainfits_txt="$resdir/gainfits_${det}.txt"
