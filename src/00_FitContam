@@ -9,7 +9,12 @@ set -eo pipefail
 nproc=16
 
 aimratio=--aimratio
-export CONTAMID=$(./ciaostr)_contamfit_some
+resp120C='--120C'
+
+aimratio=
+resp120C=
+
+export CONTAMID=$(./ciaostr)_contamfit
 
 datadir=$(./datadir)
 fitdir="$datadir/fits/$CONTAMID"
@@ -24,9 +29,17 @@ mkdir -p "$resdir"
 for det in i3 s3; do
     obsids=$(obsids $det)
 
-    false && env CONTAMFILE=NONE parallel -j $nproc ./specextract ::: $obsids
+    true && env CONTAMFILE=NONE parallel -j $nproc ./specextract $resp120C ::: $obsids
 
-    parallel -j $nproc bash -x ./contamfit $aimratio ::: $obsids
+    #
+    # simul fits must be done separately since a race condition may
+    # occur: while the separate obsid norm-fit energy-shifted pi
+    # files are being copied to the output directory, the simul fit is
+    # trying to use them
+    #
+    simul_obsids=$(perl -F= -anle 'print $F[0]' ../data/simul/$det)
+    parallel -j $nproc bash -x ./contamfit $aimratio $resp120C ::: $obsids
+    parallel -j $nproc bash -x ./contamfit $aimratio $resp120C ::: $simul_obsids
 
     contamfits_txt="$resdir/contamfits_${det}.txt"
     perl ./compile_fit_results.pl contam $obsids | tee "$contamfits_txt"

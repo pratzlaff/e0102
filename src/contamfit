@@ -12,22 +12,27 @@
 
 set -eo pipefail
 
-TEMP=$(getopt -o 'h' --long 'help,aimratio' -- "$@") || {
+TEMP=$(getopt -o 'h' --long 'help,aimratio,120C' -- "$@") || {
 	echo 'Terminating...' >&2
 	exit 1
 }
 eval set -- "$TEMP"
 unset TEMP
 
-aimratio=no
+aimratio=
+resp120C=
+
 while true; do
     case "$1" in
 	'-h' | '--help')
-	    echo "Usage: $0 [-h|--help] [--aimratio] [obsid1 obsid2 ...]" >&2
+	    echo "Usage: $0 [-h|--help] [--aimratio] [--120C] [obsid1 obsid2 ...]" >&2
 	    exit
 	    ;;
 	'--aimratio')
 	    aimratio=yes; shift; continue
+	    ;;
+	'--120C')
+	    resp120C='-120C'; shift; continue
 	    ;;
 	'--')
 	    shift; break
@@ -69,7 +74,7 @@ simul_pi_files() {
     if [ -n "$match" ]; then
 	cut -d= -f2 <<<$match | perl -F, -anle 'print for @F'  |
 	    while read obs; do
-		echo -n "$datadir/fits/$CONTAMID/$obs/${obs}_energy_shift.pi "
+		echo -n "$datadir/fits/${CONTAMID}/$obs/${obs}_energy_shift.pi "
 	    done
 	echo
     fi
@@ -92,7 +97,7 @@ obsid_date() {
 get_energy_shift_pi() {
     local obsid=$(printf %05d $((10#"$1")))
     fitdir="$datadir/fits/$CONTAMID/$obsid"
-    cp $datadir/fits/$($SCRIPTDIR/ciaostr)/$obsid/${obsid}_{bkg_,}energy_shift.pi $fitdir
+    cp -a $datadir/fits/$($SCRIPTDIR/ciaostr)${resp120C}/$obsid/${obsid}_{bkg_,}energy_shift.pi $fitdir
 
     newpi="$fitdir/${obsid}_energy_shift.pi"
     bkgpi="$fitdir/${obsid}_bkg_energy_shift.pi"
@@ -167,8 +172,10 @@ fit_obsid() {
     [ "$det" = i3 -a "$chipy" = High ] && aim=yes
     [ "$det" = s3 -a "$chipy" = Mid ] && aim=yes
     if [ "$aimratio" = yes -a "$aim" = no ]; then
-	OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C)
-	FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C)
+	tdep=
+	[ -n "$resp120C" ] && tdep='--no-tdep'
+	OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C $tdep)
+	FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C $tdep)
 	[ -n "$OtoC" ] && ratio_vals=$(echo -e "newpar 210 $OtoC -1\nnewpar 211 $FtoC -1")
     fi
 
@@ -208,11 +215,7 @@ EOP
 }
 
 for obsid in $obsids; do
-    get_energy_shift_pi $obsid
+    # simul fit cases are special cases
+    grep -q ^$obsid $SCRIPTDIR/../data/simul/[is]3 || get_energy_shift_pi $obsid
     fit_obsid $obsid
-    match=$(\grep --no-filename =$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
-    [ -n "$match" ] && {
-	simul_obs=$(perl -F= -anle 'print $F[0]' <<<$match)
-	fit_obsid $simul_obs
-    } || :
 done

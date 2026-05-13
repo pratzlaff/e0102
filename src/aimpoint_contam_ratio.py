@@ -24,7 +24,9 @@ def best_fit_contam_ratio(args):
         old = os.environ['CONTAMID']
     except:
         pass
-    os.environ['CONTAMID'] = 'ciao4.18.0_caldb4.12.3_contamfit_all'
+    os.environ['CONTAMID'] = 'ciao4.18.0_caldb4.12.3_contamfit'
+    if not args.tdep:
+        os.environ['CONTAMID'] += '-120C'
     obsid2, data = read_contamfits(contamfits_file(det))
     if old is not None:
         os.environ['CONTAMID'] = old
@@ -102,6 +104,8 @@ def main():
     )
     parser.add_argument('obsid', type=int)
     parser.add_argument('ratio', choices=('O/C','F/C'))
+    parser.add_argument('--tdep', default=True, action=argparse.BooleanOptionalAction)
+
     args = parser.parse_args()
 
     best_fit_contam_ratio(args)
