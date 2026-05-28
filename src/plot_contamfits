@@ -50,7 +50,7 @@ plot_contamfit() {
 
     local obsid_chipy=$obsid
 
-    simul=$(\grep ^$obsid "$srcdir/../data/simul/"[is]3 || :)
+    local simul=$(\grep ^$obsid "$srcdir/../data/simul/"[is]3 || :)
     [ -n "$simul" ] && {
 	obsid=$(perl -F= -anle 'print $F[1]' <<<"$simul")
 	obsid_chipy=$(echo $obsid | cut -d, -f1)
@@ -65,8 +65,8 @@ plot_contamfit() {
 
     local date=$(obsid_date ${obsid%%,*})
 
-    det=$($SCRIPTDIR/detector $obsid)
-    chip=${det^^}
+    local det=$(detector $obsid)
+    local chip=${det^^}
 
     cat - <<EOP >"$plotfile"
 lmod contelem_l ${contelem_l}

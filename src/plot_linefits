@@ -50,8 +50,8 @@ plot_linefit() {
 
     local date=$(obsid_date $obsid)
 
-    det=$($SCRIPTDIR/detector $obsid)
-    chip=${det^^}
+    local det=$(detector $obsid)
+    local chip=${det^^}
 
     cat - <<EOP >"$plotfile"
 @$savefile

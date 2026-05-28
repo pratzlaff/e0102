@@ -8,7 +8,7 @@ o8_cutoff=2023
 Ne_ratio=0.9528
 
 # Best-fit values for line normalizations on S3, 2003-2010
-declare -A Params=(
+declare -A Params_s=(
     [1]=1.068      # cons
     [127]=1.267e-3 # O7
     [118]=4.307e-3 # O8
@@ -17,7 +17,29 @@ declare -A Params=(
     [37]=0.120e-3  # Mg11
 )
 
+declare -A Params_i=(
+    [1]=0.978      # cons
+    [127]=1.299e-3 # O7
+    [118]=4.765e-3 # O8
+    [67]=1.620e-3  # Ne9
+    [61]=1.581e-3  # Ne10
+    [37]=0.145e-3  # Mg11
+)
+
 contelem_l=/data/legs/rpete/flight/acis_contam/xspec_model/mymodels
+
+detector() {
+    [ $# -eq 1 ] || {
+	echo "Usage: $0 obsid" >&2
+	return 1
+    }
+
+    obsid=$(printf %05d $((10#"$1")))
+    for d in i3 s3; do
+	\grep -q ^$obsid $datadir/obs_info/$d.txt && { echo $d; return; }
+	\grep -q ^$obsid $srcdir/../data/simul/$d && { echo $d; return; }
+    done
+}
 
 obsids()
 {

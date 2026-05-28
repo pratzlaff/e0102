@@ -81,6 +81,15 @@ simul_pi_files() {
 }
 
 param_vals() {
+    local obsid="$1"
+    local det=$(detector $obsid)
+
+    # This is done to copy Params_[is] (from functions.sh) to
+    # Params
+    local str=Params_${det:0:1}
+    local def=$(eval "declare -p $str")
+    eval "${def/$str/Params}"
+
     for par in ${!Params[@]};
     do
 	echo newpar $par ${Params[$par]} -1
@@ -89,18 +98,18 @@ param_vals() {
 
 obsid_date() {
     local obsid="$1"
-    match=$(\grep --no-filename ^$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
+    local match=$(\grep --no-filename ^$obsid $SCRIPTDIR/../data/simul/[is]3 || :)
     [ -n "$match" ] && obsid=$(perl -F, -anle 'print $F[-1]' <<<$match)
     \grep ^$obsid $datadir/obs_info/all.txt | perl -anle 'print $F[1]'
 }
 
 get_energy_shift_pi() {
     local obsid=$(printf %05d $((10#"$1")))
-    fitdir="$datadir/fits/$CONTAMID/$obsid"
+    local fitdir="$datadir/fits/$CONTAMID/$obsid"
     cp -a $datadir/fits/$($SCRIPTDIR/ciaostr)${resp120C}/$obsid/${obsid}_{bkg_,}energy_shift.pi $fitdir
 
-    newpi="$fitdir/${obsid}_energy_shift.pi"
-    bkgpi="$fitdir/${obsid}_bkg_energy_shift.pi"
+    local newpi="$fitdir/${obsid}_energy_shift.pi"
+    local bkgpi="$fitdir/${obsid}_bkg_energy_shift.pi"
 
     punlearn dmhedit
     dmhedit \
@@ -160,22 +169,22 @@ fit_obsid() {
     local pdf_file="$fitdir/${obsid}_contamfit.pdf"
     rm -f "$save_file"
 
-    date=$(obsid_date $obsid)
-    tauL=$(perl -le "print( (9**(1/23))**($date-2003))")
+    local date=$(obsid_date $obsid)
+    local tauL=$(perl -le "print( (9**(1/23))**($date-2003))")
 
-    param_vals=$(param_vals)
+    local param_vals=$(param_vals $obsid)
 
-    aim=no
-    chipy=$(chipy_region $obsid)
-    ratio_vals=
-    det=$($SCRIPTDIR/detector $obsid)
+    local aim=no
+    local chipy=$(chipy_region $obsid)
+    local ratio_vals=
+    local det=$(detector $obsid)
     [ "$det" = i3 -a "$chipy" = High ] && aim=yes
     [ "$det" = s3 -a "$chipy" = Mid ] && aim=yes
     if [ "$aimratio" = yes -a "$aim" = no ]; then
-	tdep=
+	local tdep=
 	[ -n "$resp120C" ] && tdep='--no-tdep'
-	OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C $tdep)
-	FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C $tdep)
+	local OtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid O/C $tdep)
+	local FtoC=$(python3 $SCRIPTDIR/aimpoint_contam_ratio.py $obsid F/C $tdep)
 	[ -n "$OtoC" ] && ratio_vals=$(echo -e "newpar 210 $OtoC -1\nnewpar 211 $FtoC -1")
     fi
 
