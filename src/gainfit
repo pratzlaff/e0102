@@ -1,4 +1,4 @@
-! /bin/bash
+#! /bin/bash
 
 # Adapted from
 # /data/paul11/plucinsk/chandra/data/e0102/I3/scripts/gainfit_S3_cstat.pl
