@@ -121,7 +121,7 @@ def make_plots(args, date, data, chy, node):
                 ax.plot(xlim, [iachec[key]['lo']]*2, 'k:')
                 ax.plot(xlim, [iachec[key]['hi']]*2, 'k:')
 
-            if key == 'cons':
+            if key == 'cons' and False:
                 ax.plot(xlim, [cons_iachec_2016]*2, 'r-')
 
         ylim = ax.get_ylim()
@@ -150,7 +150,7 @@ def make_plots(args, date, data, chy, node):
                 leg = Legend(ax, line, [label], loc='lower left', frameon=False)
                 ax.add_artist(leg)
 
-            if key == 'cons':
+            if key == 'cons' and False:
                 line = ax.plot(0, 0, '-', color='r')
                 label = '2003-06 value'
                 leg = Legend(ax, line, [label], loc='lower right', frameon=False)
