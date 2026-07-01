@@ -4,9 +4,6 @@ datadir=/data/legs/rpete/data/e0102
 o7_cutoff=2020
 o8_cutoff=2023
 
-# python3 Ne_ratio.py /data/legs/rpete/data/e0102/fits/ciao4.18.0_caldb4.12.3/results/shiftfits_s3.txt
-Ne_ratio=0.9528
-
 # Best-fit values for line normalizations on S3, 2003-2010
 declare -A Params_s=(
     [1]=1.068      # cons
@@ -17,6 +14,7 @@ declare -A Params_s=(
     [37]=0.120e-3  # Mg11
 )
 
+# Best-fit values for line normalizations on I3, 2003-2010
 declare -A Params_i=(
     [1]=0.978      # cons
     [127]=1.299e-3 # O7
@@ -25,6 +23,18 @@ declare -A Params_i=(
     [61]=1.581e-3  # Ne10
     [37]=0.145e-3  # Mg11
 )
+
+Ne_ratio() {
+    local obsid="$1"
+    local det=$(detector $obsid)
+
+    # This is done to copy Params_[is] (from functions.sh) to
+    # Params
+    local str=Params_${det:0:1}
+    local def=$(eval "declare -p $str")
+    eval "${def/$str/Params}"
+    perl -le "print ${Params[67]}/${Params[61]}"
+}
 
 contelem_l=/data/legs/rpete/flight/acis_contam/xspec_model/mymodels
 

@@ -79,7 +79,7 @@ for obsid in $obsids; do
     [ $year -gt ${o7_cutoff} ] && o7_freeze='freeze 127'
     [ $year -gt ${o8_cutoff} ] && o8_freeze='freeze 118'
 
-    [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$Ne_ratio"
+    [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$(Ne_ratio $obsid)"
 
     thawCons='thaw 1'
     [ "$thawcons" = no ] && thawCons=''

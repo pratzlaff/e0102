@@ -112,7 +112,7 @@ fit_obsid() {
     Ne9conf='error max 4.0 1. 67'
     [ "$tieNe9" = yes ] && {
 	Ne9conf=
-	Ne9norm="newpar 67=61*$Ne_ratio"
+	Ne9norm="newpar 67=61*$(Ne_ratio $obsid)"
     }
 
     Consconf='error max 4.0 1. 1'

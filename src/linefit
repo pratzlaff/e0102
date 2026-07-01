@@ -91,7 +91,7 @@ for obsid in $obsids; do
 	o8_error=''
     }
 
-    [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$Ne_ratio"
+    [ "$tieNe9" = yes ] && Ne9norm="newpar 67=61*$(Ne_ratio $obsid)"
 
     thawCons='thaw 1'
     [ "$thawcons" = no ] && thawCons=''
